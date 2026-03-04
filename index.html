@@ -820,27 +820,58 @@ function delProf(e,i){e.stopPropagation();profiles.splice(i,1);localStorage.setI
 ════════════════════════════════════════ */
 async function loadM3U(url){
   setSt('ld',T('loading'));
-  const proxies=[
-    PROXY_NETLIFY+encodeURIComponent(url),
-    PROXY_FALLBACK+encodeURIComponent(url),
-    'https://corsproxy.io/?'+encodeURIComponent(url),
-    url // direct last
+  document.getElementById('chListEl').innerHTML='<div class="lmsg"><div class="lsp"></div>'+T('loading')+'</div>';
+
+  // Lista de proxies para tentar em ordem
+  const proxies = [
+    '/.netlify/functions/proxy?url=' + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?' + encodeURIComponent(url),
+    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
   ];
-  let text=null;
-  for(const attempt of proxies){
+
+  let text = null;
+
+  for(const proxyUrl of proxies){
     try{
-      const r=await fetch(attempt,{headers:{'User-Agent':'Mozilla/5.0'}});
+      const controller = new AbortController();
+      const timer = setTimeout(()=>controller.abort(), 12000);
+      const r = await fetch(proxyUrl, {
+        signal: controller.signal,
+        headers: { 'Accept': '*/*' }
+      });
+      clearTimeout(timer);
       if(!r.ok) continue;
-      const t=await r.text();
-      if(t.includes('#EXTM3U')||t.includes('#EXTINF')){text=t;break;}
-    }catch(e){continue;}
+      const t = await r.text();
+      if(t && (t.includes('#EXTM3U') || t.includes('#EXTINF'))){
+        text = t;
+        console.log('Loaded via:', proxyUrl);
+        break;
+      }
+    }catch(e){
+      console.warn('Proxy failed:', proxyUrl, e.message);
+      continue;
+    }
   }
+
   if(text){
     parseM3U(text);
   }else{
-    setSt('err','Failed to load list');
+    setSt('err','Erro ao carregar lista');
     toastShow(lang==='pt'?'Erro ao carregar lista. Verifique usuário, senha e DNS.':'Failed to load. Check credentials and DNS.');
-    document.getElementById('chListEl').innerHTML='<div class="lmsg">⚠️ Erro ao carregar lista.<br><small>Verifique usuário, senha e DNS.</small></div>';
+    document.getElementById('chListEl').innerHTML=`
+      <div class="lmsg" style="padding:20px;">
+        <div style="font-size:28px;margin-bottom:12px;">⚠️</div>
+        <div style="color:#ff2d5e;font-weight:700;margin-bottom:8px;">Erro ao carregar lista</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;margin-bottom:16px;">
+          • Verifique usuário, senha e DNS<br>
+          • O servidor pode estar offline<br>
+          • Tente novamente em alguns segundos
+        </div>
+        <button onclick="reloadAll()" style="background:linear-gradient(135deg,var(--neon),#00c878);border:none;border-radius:8px;color:#000;font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;padding:10px 20px;cursor:pointer;letter-spacing:1px;">↺ TENTAR NOVAMENTE</button>
+        <br><br>
+        <button onclick="doLogout()" style="background:rgba(255,45,94,.1);border:1px solid rgba(255,45,94,.3);border-radius:8px;color:#ff2d5e;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:8px 16px;cursor:pointer;">← VOLTAR E CORRIGIR DADOS</button>
+      </div>`;
     setBusy(false);
   }
 }
