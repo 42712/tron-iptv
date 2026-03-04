@@ -363,7 +363,10 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
     <div class="lform" id="lfC">
       <input class="linput" id="lName" type="text"     placeholder="Any Name" autocomplete="off">
       <input class="linput" id="lUser" type="text"     placeholder="Username" autocomplete="username">
-      <input class="linput" id="lPass" type="password" placeholder="Password" autocomplete="current-password">
+      <div style="position:relative;">
+        <input class="linput" id="lPass" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:46px;width:100%;">
+        <button onclick="togglePass()" type="button" id="eyeBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:18px;padding:0;line-height:1;">👁</button>
+      </div>
       <input class="linput" id="lDns"  type="text"     placeholder="http://url_here.com:port">
       <button class="add-btn" id="abC" onclick="loginCred()">ADD USER</button>
     </div>
@@ -387,7 +390,7 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 ═══════════════════════════════════════ -->
 <div class="screen" id="homeScreen">
   <div class="home-hdr">
-    <div class="h-logo">
+    <div class="h-logo" onclick="goBackFromHome()" style="cursor:pointer;" title="Trocar conta">
       <div class="tron-rings" style="width:36px;height:36px;position:relative;">
         <div class="tr tr1"></div><div class="tr tr2"></div><div class="tr tr3"></div>
         <div class="tr-core" style="inset:13px;"></div>
@@ -498,7 +501,8 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 <div class="screen" id="playerScreen">
 
   <div class="p-topbar">
-    <button class="pbtn" onclick="goHome()">← HOME</button>
+    <button class="pbtn" onclick="goHome()">🏠 HOME</button>
+    <button class="pbtn" onclick="goBackFromHome()" style="color:var(--t2);">← <span id="txt_back">TROCAR CONTA</span></button>
     <div>
       <span class="p-chname" id="pChNm">—</span>
       <span class="p-chgrp" id="pChGr"></span>
@@ -640,10 +644,11 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 /* ════════════════════════════════════════
    STATE
 ════════════════════════════════════════ */
-// Auto-detecta proxy: usa Netlify em produção, fallback público em localhost
-const PROXY = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-  ? 'https://api.allorigins.win/raw?url='
-  : '/.netlify/functions/proxy?url=';
+// Auto-detecta proxy
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const PROXY_NETLIFY = '/.netlify/functions/proxy?url=';
+const PROXY_FALLBACK = 'https://api.allorigins.win/raw?url=';
+const PROXY = IS_LOCAL ? PROXY_FALLBACK : PROXY_NETLIFY;
 let channels=[],
     favs=JSON.parse(localStorage.getItem('ti_favs')||'[]'),
     profiles=JSON.parse(localStorage.getItem('ti_profs')||'[]'),
@@ -667,7 +672,7 @@ const i18n={
     fp_play:'PLAY/PAUSE',fp_mute:'MUDO',fp_restart:'REINICIAR',fp_fav:'FAVORITO',fp_exit:'SAIR T.CHEIA',fp_close:'FECHAR',
     settings_title:'Configurações',lang_label:'Idioma',save_btn:'SALVAR',
     no_results:'Nenhum resultado',loading:'Carregando…',
-    logged:'Conectado',select_ch:'SELECIONE UM CANAL'
+    logged:'Conectado',select_ch:'SELECIONE UM CANAL',back:'TROCAR CONTA'
   },
   en:{
     search:'Master Search',livetv:'LIVE TV',movies:'MOVIES',series:'SERIES',
@@ -678,7 +683,7 @@ const i18n={
     fp_play:'PLAY/PAUSE',fp_mute:'MUTE',fp_restart:'RESTART',fp_fav:'FAVORITE',fp_exit:'EXIT FULLSCREEN',fp_close:'CLOSE',
     settings_title:'Settings',lang_label:'Language',save_btn:'SAVE',
     no_results:'No results',loading:'Loading…',
-    logged:'Logged in',select_ch:'SELECT A CHANNEL'
+    logged:'Logged in',select_ch:'SELECT A CHANNEL',back:'SWITCH ACCOUNT'
   }
 };
 function T(k){return(i18n[lang]||i18n.pt)[k]||k;}
@@ -767,6 +772,14 @@ function goHome(){
   closeMedium();closeFullPlayer();
   showScreen('homeScreen');
 }
+function goBackFromHome(){
+  // From home → go back to login (switch account)
+  if(confirm(lang==='pt'?'Voltar para o login / trocar conta?':'Go back to login / switch account?')){
+    destroyAll();channels=[];curCh=null;
+    setBusy(false);renderProfs();
+    showScreen('loginScreen');
+  }
+}
 function doLogout(){
   if(!confirm(lang==='pt'?'Deseja sair?':'Logout?'))return;
   destroyAll();channels=[];curCh=null;m3uUrl='';activeTab='live';activeCat='All';
@@ -807,15 +820,27 @@ function delProf(e,i){e.stopPropagation();profiles.splice(i,1);localStorage.setI
 ════════════════════════════════════════ */
 async function loadM3U(url){
   setSt('ld',T('loading'));
-  try{
-    let text;
-    try{const r=await fetch(PROXY+encodeURIComponent(url));if(!r.ok)throw 0;text=await r.text();}
-    catch{const r=await fetch(url);if(!r.ok)throw 0;text=await r.text();}
+  const proxies=[
+    PROXY_NETLIFY+encodeURIComponent(url),
+    PROXY_FALLBACK+encodeURIComponent(url),
+    'https://corsproxy.io/?'+encodeURIComponent(url),
+    url // direct last
+  ];
+  let text=null;
+  for(const attempt of proxies){
+    try{
+      const r=await fetch(attempt,{headers:{'User-Agent':'Mozilla/5.0'}});
+      if(!r.ok) continue;
+      const t=await r.text();
+      if(t.includes('#EXTM3U')||t.includes('#EXTINF')){text=t;break;}
+    }catch(e){continue;}
+  }
+  if(text){
     parseM3U(text);
-  }catch{
+  }else{
     setSt('err','Failed to load list');
-    toastShow(lang==='pt'?'Erro ao carregar lista. Verifique os dados.':'Failed to load list. Check credentials.');
-    document.getElementById('chListEl').innerHTML='<div class="lmsg">⚠️ Error loading list.</div>';
+    toastShow(lang==='pt'?'Erro ao carregar lista. Verifique usuário, senha e DNS.':'Failed to load. Check credentials and DNS.');
+    document.getElementById('chListEl').innerHTML='<div class="lmsg">⚠️ Erro ao carregar lista.<br><small>Verifique usuário, senha e DNS.</small></div>';
     setBusy(false);
   }
 }
@@ -1106,6 +1131,23 @@ function updateDt(){
   document.getElementById('hDt').textContent=`${h}:${m} ${mo[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
 }
 updateDt();setInterval(updateDt,30000);
+
+/* ════════════════════════════════════════
+   SHOW/HIDE PASSWORD
+════════════════════════════════════════ */
+function togglePass(){
+  const inp=document.getElementById('lPass');
+  const btn=document.getElementById('eyeBtn');
+  if(inp.type==='password'){
+    inp.type='text';
+    btn.style.color='var(--neon)';
+    btn.title='Ocultar senha';
+  }else{
+    inp.type='password';
+    btn.style.color='rgba(255,255,255,.4)';
+    btn.title='Mostrar senha';
+  }
+}
 
 /* ════════════════════════════════════════
    INIT
