@@ -1,76 +1,47 @@
 // netlify/functions/proxy.js
-// Função serverless para fazer proxy de listas M3U sem bloqueio CORS
+// Proxy CORS para listas M3U - Node 18 fetch nativo (sem dependências)
 
-exports.handler = async (event, context) => {
-  const url = event.queryStringParameters?.url;
+exports.handler = async (event) => {
+  const CORS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+  };
 
-  if (!url) {
-    return {
-      statusCode: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'URL parameter is required' })
-    };
-  }
-
-  // Validação básica de segurança
-  try {
-    const parsed = new URL(url);
-    const allowed = ['http:', 'https:'];
-    if (!allowed.includes(parsed.protocol)) {
-      return {
-        statusCode: 403,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'Protocol not allowed' })
-      };
-    }
-  } catch {
-    return {
-      statusCode: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Invalid URL' })
-    };
-  }
-
-  // Handle OPTIONS preflight
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': '*',
-      },
-      body: ''
-    };
+    return { statusCode: 204, headers: CORS, body: '' };
+  }
+
+  const url = event.queryStringParameters?.url;
+  if (!url) return { statusCode: 400, headers: CORS, body: 'Missing url' };
+
+  try { new URL(url); } catch {
+    return { statusCode: 400, headers: CORS, body: 'Invalid URL' };
   }
 
   try {
-    const fetch = require('node-fetch');
-    const response = await fetch(url, {
+    const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': '*/*',
-      },
-      timeout: 15000
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      }
     });
 
-    const contentType = response.headers.get('content-type') || 'text/plain';
-    const body = await response.text();
+    const body = await res.text();
 
     return {
-      statusCode: 200,
+      statusCode: res.status,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': contentType,
-        'Cache-Control': 'no-cache',
+        ...CORS,
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
       },
       body
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Proxy error: ' + err.message })
-    };
+    return { statusCode: 502, headers: CORS, body: 'Error: ' + err.message };
   }
 };
