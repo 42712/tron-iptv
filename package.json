@@ -1,9 +1,0 @@
-{
-  "name": "tron-iptv",
-  "version": "1.0.0",
-  "description": "Tron IPTV Player",
-  "private": true,
-  "engines": {
-    "node": "18"
-  }
-}
