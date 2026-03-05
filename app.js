@@ -1,3 +1,4 @@
+```javascript
 let server,user,pass
 
 const grid=document.getElementById("grid")
@@ -31,6 +32,7 @@ if(Hls.isSupported()){
 let hls=new Hls()
 
 hls.loadSource(url)
+
 hls.attachMedia(video)
 
 hls.on(Hls.Events.ERROR,function(){
@@ -47,6 +49,12 @@ video.src=url
 
 }
 
+function clear(){
+
+grid.innerHTML=""
+
+}
+
 function card(name,url,img){
 
 let div=document.createElement("div")
@@ -59,17 +67,43 @@ div.innerHTML=`
 
 <p>${name}</p>
 
+<button class="fav">⭐</button>
+
 `
 
 div.onclick=()=>play(url)
+
+div.querySelector(".fav").onclick=(e)=>{
+
+e.stopPropagation()
+
+saveFav(name,url,img)
+
+}
 
 grid.appendChild(div)
 
 }
 
-function clear(){
+function saveFav(name,url,img){
 
-grid.innerHTML=""
+let fav=JSON.parse(localStorage.getItem("fav")||"[]")
+
+fav.push({name,url,img})
+
+localStorage.setItem("fav",JSON.stringify(fav))
+
+alert("Adicionado aos favoritos")
+
+}
+
+function favorites(){
+
+clear()
+
+let fav=JSON.parse(localStorage.getItem("fav")||"[]")
+
+fav.forEach(f=>card(f.name,f.url,f.img))
 
 }
 
@@ -123,13 +157,35 @@ card(m.name,url,m.stream_icon)
 
 }
 
-function favorites(){
+function series(){
 
 clear()
 
-let fav=JSON.parse(localStorage.getItem("fav")||"[]")
+fetch(api("get_series"))
 
-fav.forEach(f=>card(f.name,f.url,f.img))
+.then(r=>r.json())
+
+.then(data=>{
+
+data.forEach(s=>{
+
+let div=document.createElement("div")
+
+div.className="card"
+
+div.innerHTML=`
+
+<img src="${s.cover || "https://via.placeholder.com/300x400"}">
+
+<p>${s.name}</p>
+
+`
+
+grid.appendChild(div)
+
+})
+
+})
 
 }
 
@@ -144,3 +200,10 @@ c.style.display=c.innerText.toLowerCase().includes(q)?"block":"none"
 })
 
 }
+
+if("serviceWorker" in navigator){
+
+navigator.serviceWorker.register("sw.js")
+
+}
+```
