@@ -1,12 +1,11 @@
-```html
 <!DOCTYPE html>
-<html lang="pt">
+<html>
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>IPTV Web Player</title>
+<title>IPTV Web Player Pro</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -16,7 +15,7 @@
 
 <body>
 
-<div id="loginBox">
+<div id="login">
 
 <h2>IPTV Login</h2>
 
@@ -24,42 +23,42 @@
 
 <input id="user" placeholder="Usuário">
 
-<div class="passwordBox">
+<div class="passbox">
 <input id="pass" type="password" placeholder="Senha">
-<button onclick="togglePassword()">👁</button>
+<button onclick="togglePass()">👁</button>
 </div>
 
-<button class="loginBtn" onclick="login()">Entrar</button>
+<button onclick="login()">Entrar</button>
 
 </div>
+
 
 <div id="app">
 
-<div class="sidebar">
+<header>
 
-<h3>Menu</h3>
+<h1>IPTV Player</h1>
 
-<div onclick="loadLive()">📺 Canais</div>
-<div onclick="loadMovies()">🎬 Filmes</div>
-<div onclick="loadSeries()">📺 Séries</div>
+<input id="search" placeholder="Buscar..." onkeyup="search()">
 
-</div>
+</header>
 
-<div class="main">
 
 <video id="video" controls autoplay></video>
 
-<input id="search" placeholder="Buscar..." onkeyup="searchItem()">
+<div class="menu">
 
-<div id="list"></div>
+<button onclick="live()">Canais</button>
+<button onclick="movies()">Filmes</button>
+<button onclick="favorites()">Favoritos</button>
 
 </div>
 
+<div id="grid"></div>
+
 </div>
 
-<script src="api.js"></script>
-<script src="player.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
-```
