@@ -1,53 +1,43 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
+
 <meta charset="UTF-8">
-<title>IPTV Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>IPTV Web Player</title>
+
+<link rel="stylesheet" href="style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-<style>
-body{
-background:#111;
-color:white;
-font-family:Arial;
-}
-
-#video{
-width:100%;
-height:400px;
-}
-
-.sidebar{
-width:250px;
-float:left;
-height:100vh;
-overflow:auto;
-background:#222;
-}
-
-.content{
-margin-left:260px;
-padding:10px;
-}
-
-.item{
-padding:10px;
-cursor:pointer;
-border-bottom:1px solid #333;
-}
-
-.item:hover{
-background:#444;
-}
-</style>
 </head>
 
 <body>
 
+<div id="loginBox">
+
+<h2>IPTV Login</h2>
+
+<input id="server" placeholder="http://servidor:porta">
+
+<input id="user" placeholder="Usuário">
+
+<div class="passwordBox">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="togglePassword()">👁</button>
+</div>
+
+<button class="loginBtn" onclick="login()">Entrar</button>
+
+</div>
+
+<div id="app">
+
 <div class="sidebar">
 
-<h3>Categorias</h3>
+<h3>Menu</h3>
 
 <div onclick="loadLive()">📺 Canais</div>
 <div onclick="loadMovies()">🎬 Filmes</div>
@@ -55,15 +45,21 @@ background:#444;
 
 </div>
 
-<div class="content">
+<div class="main">
 
-<video id="video" controls></video>
+<video id="video" controls autoplay></video>
+
+<input id="search" placeholder="Buscar..." onkeyup="searchItem()">
 
 <div id="list"></div>
 
 </div>
 
+</div>
+
+<script src="api.js"></script>
 <script src="player.js"></script>
 
 </body>
 </html>
+```
