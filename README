@@ -1,61 +1,31 @@
-```markdown
-# IPTV Web Player
+# IPTV Web Player Pro
 
-Player IPTV web leve com suporte Xtream Codes.
+Player IPTV para navegador.
 
-Funciona direto no navegador usando HLS.
+Funciona com servidores Xtream Codes.
 
 ## Recursos
 
-- Login com URL, usuário e senha
-- Mostrar / ocultar senha
-- Player HLS
-- Canais, filmes e séries
-- Busca
-- Posters de filmes
-- Layout responsivo
-- Funciona em Smart TV
+Login URL usuário senha  
+Busca  
+Favoritos  
+Reconexão automática  
+Layout estilo streaming  
 
-## Tecnologias
+## Deploy
 
-- HTML
-- CSS
-- JavaScript
-- HLS.js
-
-## Instalação
-
-1. Clone o repositório
-
-git clone https://github.com/SEU-USUARIO/iptv-web-player
-
-2. Abra o arquivo index.html
-
-ou publique no Netlify.
-
-## Deploy no Netlify
-
-1. Crie conta no Netlify
-2. Conecte com GitHub
-3. Escolha o repositório
-4. Deploy automático
+Suba no GitHub e conecte no Netlify.
 
 ## Login
 
-Informe:
-
-URL do servidor
-
-Usuário
-
-Senha
-
-Exemplo:
+Digite:
 
 http://servidor:porta
 
+usuário
+
+senha
+
 ## Aviso
 
-Este projeto é apenas um player.
-Ele não fornece conteúdo IPTV.
-```
+Este projeto não fornece conteúdo IPTV.
