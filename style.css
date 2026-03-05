@@ -1,6 +1,7 @@
+```css
 body{
 
-background:#0b0b0b;
+background:#0a0a0a;
 color:white;
 font-family:Arial;
 margin:0;
@@ -20,7 +21,7 @@ text-align:center;
 input{
 
 padding:10px;
-margin:5px;
+margin:6px;
 width:250px;
 
 }
@@ -49,6 +50,7 @@ header{
 
 display:flex;
 justify-content:space-between;
+align-items:center;
 
 }
 
@@ -61,10 +63,17 @@ margin:10px 0;
 
 }
 
+.menu{
+
+margin:10px 0;
+
+}
+
 .menu button{
 
 margin:5px;
 padding:10px;
+cursor:pointer;
 
 }
 
@@ -78,7 +87,7 @@ gap:12px;
 
 .card{
 
-background:#1a1a1a;
+background:#1b1b1b;
 padding:10px;
 cursor:pointer;
 
@@ -89,3 +98,19 @@ cursor:pointer;
 width:100%;
 
 }
+
+.card:hover{
+
+background:#333;
+
+}
+
+.fav{
+
+background:none;
+border:none;
+color:yellow;
+cursor:pointer;
+
+}
+```
