@@ -1,116 +1,91 @@
-```css
 body{
-margin:0;
-font-family:Arial;
-background:#0f0f0f;
+
+background:#0b0b0b;
 color:white;
+font-family:Arial;
+margin:0;
+
 }
 
-#loginBox{
+#login{
 
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
 text-align:center;
+
 }
 
-#loginBox input{
+input{
 
-display:block;
-margin:10px auto;
 padding:10px;
+margin:5px;
 width:250px;
-border:none;
-border-radius:4px;
+
 }
 
-.passwordBox{
+.passbox{
+
 display:flex;
 justify-content:center;
+
 }
 
-.passwordBox button{
+.passbox button{
+
 margin-left:5px;
-cursor:pointer;
-}
 
-.loginBtn{
-
-padding:10px 20px;
-cursor:pointer;
-background:#e50914;
-color:white;
-border:none;
-border-radius:5px;
 }
 
 #app{
+
 display:none;
-}
-
-.sidebar{
-
-width:220px;
-background:#1a1a1a;
-height:100vh;
-position:fixed;
-padding:20px;
-}
-
-.sidebar div{
-
 padding:10px;
-cursor:pointer;
-border-bottom:1px solid #333;
+
 }
 
-.sidebar div:hover{
-background:#333;
-}
+header{
 
-.main{
+display:flex;
+justify-content:space-between;
 
-margin-left:240px;
-padding:20px;
 }
 
 video{
+
 width:100%;
 max-height:420px;
 background:black;
+margin:10px 0;
+
 }
 
-#search{
+.menu button{
 
-width:100%;
+margin:5px;
 padding:10px;
-margin:20px 0;
+
 }
 
-#list{
+#grid{
 
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
 gap:12px;
+
 }
 
 .card{
 
-background:#1c1c1c;
+background:#1a1a1a;
 padding:10px;
 cursor:pointer;
-border-radius:6px;
-text-align:center;
+
 }
 
 .card img{
 
 width:100%;
-border-radius:4px;
-}
 
-.card:hover{
-background:#333;
 }
-```
