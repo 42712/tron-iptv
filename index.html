@@ -1,13 +1,17 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="pt">
+
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>IPTV Web Player Pro</title>
+<title>Tron IPTV</title>
 
 <link rel="stylesheet" href="style.css">
+
+<link rel="manifest" href="manifest.json">
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -17,7 +21,7 @@
 
 <div id="login">
 
-<h2>IPTV Login</h2>
+<h2>Tron IPTV Login</h2>
 
 <input id="server" placeholder="http://servidor:porta">
 
@@ -37,20 +41,20 @@
 
 <header>
 
-<h1>IPTV Player</h1>
+<h1>TRON IPTV</h1>
 
 <input id="search" placeholder="Buscar..." onkeyup="search()">
 
 </header>
 
-
 <video id="video" controls autoplay></video>
 
 <div class="menu">
 
-<button onclick="live()">Canais</button>
-<button onclick="movies()">Filmes</button>
-<button onclick="favorites()">Favoritos</button>
+<button onclick="live()">📺 Canais</button>
+<button onclick="movies()">🎬 Filmes</button>
+<button onclick="series()">📂 Séries</button>
+<button onclick="favorites()">⭐ Favoritos</button>
 
 </div>
 
@@ -61,4 +65,6 @@
 <script src="app.js"></script>
 
 </body>
+
 </html>
+```
