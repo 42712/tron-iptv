@@ -1,0 +1,21 @@
+
+
+🔐 Receba login, senha e URL do servidor
+
+📺 Leia a lista do servidor (Xtream ou M3U)
+
+🧭 Mostre categorias: Canais / Filmes / Séries
+
+▶️ Reproduza o vídeo
+
+☁️ Hospedado no GitHub + Netlify
+
+Isso é totalmente possível usando HTML + JS puro, sem backend pesado.
+
+🧩 Estrutura recomendada do projeto
+iptv-player/
+│
+├── index.html
+├── style.css
+├── player.js
+└── api.js
