@@ -1,70 +1,334 @@
-```html
 <!DOCTYPE html>
-<html lang="pt">
-
+<html lang="pt-BR">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Tron IPTV</title>
-
-<link rel="stylesheet" href="style.css">
-
+<title>TRON IPTV — Login</title>
 <link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan:      #00f5ff;
+    --cyan-glow: rgba(0,245,255,0.55);
+    --bg:        #030a0f;
+    --surface:   #0a1f2e;
+    --border:    #0f3d52;
+    --border-hi: #1c6878;
+    --text:      #c8e8ef;
+    --text-dim:  #5a8a9a;
+    --accent:    #ff4d6d;
+  }
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+  }
+
+  /* animated grid bg */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: gridMove 18s linear infinite;
+  }
+  @keyframes gridMove { to { background-position: 64px 64px; } }
+
+  /* scanlines */
+  .scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,245,255,0.012) 3px, rgba(0,245,255,0.012) 4px
+    );
+  }
+
+  /* glow orbs */
+  .orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .orb-tl { width: 420px; height: 420px; top: -160px; left: -160px; background: rgba(0,200,220,0.07); }
+  .orb-br { width: 360px; height: 360px; bottom: -120px; right: -100px; background: rgba(0,180,200,0.06); }
+
+  /* stage */
+  .stage {
+    position: relative; z-index: 10;
+    height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  /* card */
+  .card {
+    width: 420px; max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    padding: 52px 48px 44px;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(0,245,255,0.06),
+      0 0 60px rgba(0,245,255,0.07),
+      inset 0 0 40px rgba(0,245,255,0.025);
+    animation: cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card::before, .card::after {
+    content: ''; position: absolute;
+    width: 22px; height: 22px;
+    border-color: var(--cyan); border-style: solid;
+  }
+  .card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  /* logo */
+  .logo { text-align: center; margin-bottom: 44px; }
+  .logo-hex {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 68px; height: 68px;
+    border: 1px solid var(--border-hi);
+    background: rgba(0,245,255,0.05);
+    margin-bottom: 16px;
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    animation: hexPulse 3s ease-in-out infinite;
+  }
+  @keyframes hexPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(0,245,255,0.15); }
+    50%     { box-shadow: 0 0 40px rgba(0,245,255,0.35); }
+  }
+  .logo-hex span { font-size: 26px; }
+  .logo-brand {
+    display: block;
+    font-size: 46px; font-weight: 700; letter-spacing: 10px;
+    color: var(--cyan);
+    text-shadow: 0 0 24px var(--cyan-glow), 0 0 80px rgba(0,245,255,0.2);
+    line-height: 1;
+    animation: flicker 6s infinite;
+  }
+  @keyframes flicker {
+    0%,95%,97%,100% { opacity: 1; }
+    96%             { opacity: 0.82; }
+  }
+  .logo-sub {
+    display: block; margin-top: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 5px; color: var(--text-dim);
+  }
+
+  /* fields */
+  .field { margin-bottom: 16px; }
+  .field-label {
+    display: block; margin-bottom: 7px;
+    font-size: 10px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .field-wrap { position: relative; }
+  .field-icon {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px; pointer-events: none; opacity: 0.4;
+  }
+  .field-wrap input {
+    width: 100%;
+    background: rgba(3,10,15,0.8);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px 11px 38px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field-wrap input::placeholder { color: #1e3d4d; }
+  .field-wrap input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 14px rgba(0,245,255,0.12);
+  }
+  .eye-btn {
+    position: absolute; right: 11px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-dim); font-size: 15px;
+    cursor: pointer; padding: 4px; transition: color 0.2s;
+  }
+  .eye-btn:hover { color: var(--cyan); }
+
+  /* remember */
+  .remember-row {
+    display: flex; align-items: center; gap: 8px;
+    margin: 2px 0 22px;
+  }
+  .remember-row input[type=checkbox] {
+    accent-color: var(--cyan); width: 14px; height: 14px; cursor: pointer;
+  }
+  .remember-row label {
+    font-size: 12px; letter-spacing: 1px; color: var(--text-dim); cursor: pointer;
+  }
+
+  /* button */
+  .btn-enter {
+    width: 100%; padding: 13px;
+    background: transparent; border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px; font-weight: 700; letter-spacing: 5px;
+    text-transform: uppercase; cursor: pointer;
+    position: relative; overflow: hidden; transition: color 0.3s;
+  }
+  .btn-enter::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--cyan); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s; z-index: 0;
+  }
+  .btn-enter:hover::before { transform: scaleX(1); }
+  .btn-enter:hover { color: #030a0f; }
+  .btn-enter span { position: relative; z-index: 1; }
+  .btn-enter:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-enter:disabled::before { display: none; }
+
+  /* error */
+  .error-box {
+    margin-top: 14px; padding: 10px 14px;
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.35);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; text-align: center; letter-spacing: 1px;
+    display: none;
+  }
+
+  .card-footer {
+    margin-top: 22px; text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; color: #1a3848;
+  }
+</style>
 </head>
-
 <body>
 
-<div id="login">
+<div class="bg-grid"></div>
+<div class="scanlines"></div>
+<div class="orb orb-tl"></div>
+<div class="orb orb-br"></div>
 
-<h2>Tron IPTV Login</h2>
+<div class="stage">
+  <div class="card">
 
-<input id="server" placeholder="http://servidor:porta">
+    <div class="logo">
+      <div class="logo-hex"><span>📺</span></div>
+      <span class="logo-brand">TRON</span>
+      <span class="logo-sub">IPTV · MEDIA PLAYER</span>
+    </div>
 
-<input id="user" placeholder="Usuário">
+    <div class="field">
+      <label class="field-label" for="inp-server">Servidor</label>
+      <div class="field-wrap">
+        <span class="field-icon">🌐</span>
+        <input id="inp-server" type="url"
+          placeholder="http://servidor:porta"
+          autocomplete="url" spellcheck="false">
+      </div>
+    </div>
 
-<div class="passbox">
-<input id="pass" type="password" placeholder="Senha">
-<button onclick="togglePass()">👁</button>
+    <div class="field">
+      <label class="field-label" for="inp-user">Usuário</label>
+      <div class="field-wrap">
+        <span class="field-icon">👤</span>
+        <input id="inp-user" type="text"
+          placeholder="seu usuário"
+          autocomplete="username" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="inp-pass">Senha</label>
+      <div class="field-wrap">
+        <span class="field-icon">🔑</span>
+        <input id="inp-pass" type="password"
+          placeholder="sua senha"
+          autocomplete="current-password">
+        <button class="eye-btn" onclick="togglePass()" type="button" tabindex="-1">👁</button>
+      </div>
+    </div>
+
+    <div class="remember-row">
+      <input type="checkbox" id="chk-remember" checked>
+      <label for="chk-remember">Lembrar credenciais</label>
+    </div>
+
+    <button class="btn-enter" id="btn-enter" onclick="doLogin()">
+      <span id="btn-label">▶ &nbsp;ENTRAR</span>
+    </button>
+
+    <div class="error-box" id="error-box"></div>
+
+    <div class="card-footer">XTREAM CODES COMPATIBLE</div>
+  </div>
 </div>
 
-<button onclick="login()">Entrar</button>
+<script>
+  // restore saved credentials
+  (function () {
+    try {
+      const s = JSON.parse(
+        localStorage.getItem('tron_session') ||
+        sessionStorage.getItem('tron_session') || 'null'
+      );
+      if (s) {
+        if (s.server) document.getElementById('inp-server').value = s.server;
+        if (s.user)   document.getElementById('inp-user').value   = s.user;
+        if (s.pass)   document.getElementById('inp-pass').value   = s.pass;
+      }
+    } catch (_) {}
+  })();
 
-</div>
+  function togglePass() {
+    const i = document.getElementById('inp-pass');
+    i.type = i.type === 'password' ? 'text' : 'password';
+  }
 
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
 
-<div id="app">
+  function doLogin() {
+    const server   = document.getElementById('inp-server').value.trim().replace(/\/$/, '');
+    const user     = document.getElementById('inp-user').value.trim();
+    const pass     = document.getElementById('inp-pass').value;
+    const remember = document.getElementById('chk-remember').checked;
 
-<header>
+    if (!server) { showError('Informe a URL do servidor'); return; }
+    if (!user)   { showError('Informe o usuário'); return; }
+    if (!pass)   { showError('Informe a senha'); return; }
 
-<h1>TRON IPTV</h1>
+    const session = { server, user, pass };
 
-<input id="search" placeholder="Buscar..." onkeyup="search()">
+    if (remember) {
+      localStorage.setItem('tron_session', JSON.stringify(session));
+      sessionStorage.removeItem('tron_session');
+    } else {
+      sessionStorage.setItem('tron_session', JSON.stringify(session));
+      localStorage.removeItem('tron_session');
+    }
 
-</header>
+    const btn = document.getElementById('btn-enter');
+    btn.disabled = true;
+    document.getElementById('btn-label').textContent = '⏳  CONECTANDO...';
 
-<video id="video" controls autoplay></video>
+    setTimeout(() => { window.location.href = 'app.html'; }, 380);
+  }
 
-<div class="menu">
-
-<button onclick="live()">📺 Canais</button>
-<button onclick="movies()">🎬 Filmes</button>
-<button onclick="series()">📂 Séries</button>
-<button onclick="favorites()">⭐ Favoritos</button>
-
-</div>
-
-<div id="grid"></div>
-
-</div>
-
-<script src="app.js"></script>
-
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') doLogin();
+  });
+</script>
 </body>
-
 </html>
-```
