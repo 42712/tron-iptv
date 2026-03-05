@@ -1,20 +1,34 @@
-# IPTV Web Player Pro
+```markdown
+# Tron IPTV
 
-Player IPTV para navegador.
+Player IPTV web leve para navegador.
 
-Funciona com servidores Xtream Codes.
+Compatível com servidores Xtream Codes.
 
 ## Recursos
 
-Login URL usuário senha  
-Busca  
+Login com URL, usuário e senha  
+Mostrar senha  
+Canais ao vivo  
+Filmes  
+Séries  
 Favoritos  
+Busca  
 Reconexão automática  
-Layout estilo streaming  
+Instalável como app (PWA)
+
+## Tecnologias
+
+HTML  
+CSS  
+JavaScript  
+HLS.js
 
 ## Deploy
 
-Suba no GitHub e conecte no Netlify.
+1. Suba os arquivos no GitHub
+2. Conecte o repositório no Netlify
+3. Deploy automático
 
 ## Login
 
@@ -28,4 +42,6 @@ senha
 
 ## Aviso
 
-Este projeto não fornece conteúdo IPTV.
+Este projeto é apenas um player.
+Ele não fornece conteúdo IPTV.
+```
