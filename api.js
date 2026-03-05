@@ -9,10 +9,33 @@ server=document.getElementById("server").value
 username=document.getElementById("user").value
 password=document.getElementById("pass").value
 
-document.getElementById("login").style.display="none"
+document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 
 loadLive()
+
+}
+
+function clearList(){
+
+document.getElementById("list").innerHTML=""
+
+}
+
+function createCard(name,url,poster){
+
+const card=document.createElement("div")
+
+card.className="card"
+
+card.onclick=()=>play(url)
+
+card.innerHTML=`
+<img src="${poster || 'https://via.placeholder.com/300x450'}">
+<p>${name}</p>
+`
+
+document.getElementById("list").appendChild(card)
 
 }
 
@@ -24,11 +47,11 @@ fetch(`${server}/player_api.php?username=${username}&password=${password}&action
 .then(r=>r.json())
 .then(data=>{
 
-data.forEach(ch=>{
+data.forEach(c=>{
 
-let url=`${server}/live/${username}/${password}/${ch.stream_id}.m3u8`
+let url=`${server}/live/${username}/${password}/${c.stream_id}.m3u8`
 
-addItem(ch.name,url)
+createCard(c.name,url)
 
 })
 
@@ -48,7 +71,7 @@ data.forEach(m=>{
 
 let url=`${server}/movie/${username}/${password}/${m.stream_id}.mp4`
 
-addItem(m.name,url)
+createCard(m.name,url,m.stream_icon)
 
 })
 
@@ -66,13 +89,13 @@ fetch(`${server}/player_api.php?username=${username}&password=${password}&action
 
 data.forEach(s=>{
 
-let item=document.createElement("div")
+const card=document.createElement("div")
 
-item.className="item"
+card.className="card"
 
-item.innerText=s.name
+card.innerHTML=`<p>${s.name}</p>`
 
-document.getElementById("list").appendChild(item)
+document.getElementById("list").appendChild(card)
 
 })
 
