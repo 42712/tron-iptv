@@ -1,170 +1,130 @@
-/* TRON IPTV — layout 3 colunas */
-:root{
-  --c:#00f5ff; --bg:#040c12; --s:#081a24; --s2:#0a2030;
-  --b:#0d3347; --bh:#165570; --t:#b8dde8; --td:#4a7888;
-  --acc:#ff3d5a; --gold:#ffd060; --g:#00e07a; --bar:48px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t);font-family:system-ui,sans-serif;font-size:13px}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRON IPTV</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
 
-/* ── TOPBAR ── */
-.bar{
-  position:fixed;top:0;left:0;right:0;z-index:99;
-  height:var(--bar);display:flex;align-items:center;gap:8px;padding:0 12px;
-  background:var(--s);border-bottom:1px solid var(--bh);
-}
-.logo{font-size:18px;font-weight:800;letter-spacing:3px;color:var(--c);flex-shrink:0}
-.logo em{color:var(--td);font-style:normal;font-weight:400}
-.tabs{display:flex;gap:2px;flex-shrink:0}
-.tab{
-  padding:5px 14px;background:none;border:1px solid transparent;
-  color:var(--td);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;
-}
-.tab:hover{color:var(--t);border-color:var(--b)}
-.tab.active{color:var(--c);border-color:var(--c);background:rgba(0,245,255,.07)}
-.bar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-#srch{
-  background:var(--bg);border:1px solid var(--b);color:var(--t);
-  padding:5px 10px;font-size:12px;outline:none;width:180px;transition:.2s;
-}
-#srch:focus{border-color:var(--c);width:220px}
-#srch::placeholder{color:#1e3f52}
-.btn-out{
-  background:none;border:1px solid var(--b);color:var(--td);
-  padding:5px 10px;font-size:12px;cursor:pointer;transition:.15s;
-}
-.btn-out:hover{border-color:var(--acc);color:var(--acc)}
+<!-- TOPBAR -->
+<header class="bar">
+  <div class="bar-left">
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+        <polygon points="14,6 22,10 22,18 14,22 6,18 6,10" fill="rgba(0,200,255,0.12)" stroke="#00c8ff" stroke-width="1"/>
+        <text x="14" y="17" text-anchor="middle" fill="#00c8ff" font-size="8" font-weight="bold" font-family="Arial">TV</text>
+      </svg>
+      <div class="logo-text">TRON<span>IPTV</span></div>
+    </div>
+    <div class="bar-mode" id="bar-mode">AO VIVO</div>
+  </div>
 
-/* ── WORKSPACE ── */
-.workspace{
-  position:fixed;top:var(--bar);left:0;right:0;bottom:0;
-  display:grid;
-  grid-template-columns:200px 260px 1fr;
-}
+  <div class="bar-clock" id="bar-clock"></div>
 
-/* ── COLUNAS ── */
-.col{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b)}
-.col-player{border-right:none}
-.col-head{
-  padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:3px;
-  color:var(--c);background:var(--s2);border-bottom:1px solid var(--b);
-  flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.col-body{flex:1;overflow-y:auto;overflow-x:hidden}
-.col-body::-webkit-scrollbar{width:3px}
-.col-body::-webkit-scrollbar-thumb{background:var(--b)}
+  <div class="bar-right">
+    <button class="icon-btn" onclick="toggleSearch()" title="Buscar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="icon-btn" onclick="doLogout()" title="Sair">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</header>
 
-/* ── CATEGORIA ITEM ── */
-.cat{
-  padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(13,51,71,.6);
-  border-left:2px solid transparent;transition:.12s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--td);
-}
-.cat:hover{background:rgba(0,245,255,.04);color:var(--t)}
-.cat.active{background:rgba(0,245,255,.08);border-left-color:var(--c);color:var(--c)}
+<!-- SEARCH BAR (hidden by default) -->
+<div class="search-bar" id="search-bar" style="display:none">
+  <input id="srch" type="text" placeholder="Buscar canais, filmes ou séries..." oninput="doSearch(this.value)" autofocus>
+  <button onclick="toggleSearch()">✕</button>
+</div>
 
-/* ── ITEM (canal / filme / série) ── */
-.item{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 10px;cursor:pointer;
-  border-bottom:1px solid rgba(13,51,71,.5);
-  border-left:2px solid transparent;transition:.12s;
-}
-.item:hover{background:rgba(0,245,255,.04)}
-.item.active{background:rgba(0,245,255,.08);border-left-color:var(--c)}
-.item-img{
-  width:42px;height:28px;flex-shrink:0;
-  background:var(--s2);overflow:hidden;display:flex;align-items:center;justify-content:center;
-  font-size:14px;color:var(--b);
-}
-.item-img.tall{height:42px;width:30px}
-.item-img img{width:100%;height:100%;object-fit:cover}
-.item-txt{flex:1;min-width:0}
-.item-name{font-size:12px;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-sub{font-size:10px;color:var(--td);margin-top:1px}
-.dot-live{width:5px;height:5px;border-radius:50%;background:var(--acc);flex-shrink:0;animation:bl 1.8s infinite}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
-.fav{background:none;border:none;cursor:pointer;font-size:12px;color:var(--td);padding:2px;transition:.12s;flex-shrink:0}
-.fav:hover{color:var(--gold);transform:scale(1.2)}
-.fav.on{color:var(--gold)}
+<!-- SECTION TABS -->
+<nav class="nav-tabs">
+  <button class="ntab active" data-s="live"   onclick="navTo('live')">📺 AO VIVO</button>
+  <button class="ntab"        data-s="movies" onclick="navTo('movies')">🎬 FILMES</button>
+  <button class="ntab"        data-s="series" onclick="navTo('series')">📂 SÉRIES</button>
+  <button class="ntab"        data-s="favs"   onclick="navTo('favs')">⭐ FAVORITOS</button>
+</nav>
 
-/* ── PLAYER ── */
-.col-player{display:flex;flex-direction:column}
-.player-wrap{position:relative;background:#000;flex-shrink:0;aspect-ratio:16/9;max-height:54vh}
-.player-wrap video{width:100%;height:100%;display:block}
-.idle{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  background:var(--s2);color:var(--td);gap:8px;
-}
-.idle span{font-size:40px;opacity:.18}
-.idle p{font-size:11px;letter-spacing:2px;opacity:.3}
-.pip{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:6px 10px;
-  background:linear-gradient(transparent,rgba(0,0,0,.8));
-  display:flex;justify-content:space-between;align-items:center;
-}
-.pip-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pip-live{font-size:10px;color:var(--g);letter-spacing:1px}
+<!-- WORKSPACE -->
+<div class="workspace" id="workspace">
 
-/* ── EPISÓDIOS ── */
-.ep-wrap{
-  background:var(--s2);border-top:1px solid var(--b);
-  display:flex;flex-direction:column;flex-shrink:0;max-height:220px;
-}
-.ep-top{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:7px 12px;border-bottom:1px solid var(--b);flex-shrink:0;
-}
-.ep-title{font-size:12px;font-weight:700;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ep-top button{background:none;border:1px solid var(--b);color:var(--td);padding:2px 8px;cursor:pointer;font-size:12px;flex-shrink:0}
-.ep-top button:hover{border-color:var(--acc);color:var(--acc)}
-.seasons{display:flex;gap:4px;padding:6px 10px;flex-shrink:0;overflow-x:auto;border-bottom:1px solid var(--b)}
-.seasons::-webkit-scrollbar{display:none}
-.sea{padding:3px 10px;background:none;border:1px solid var(--b);color:var(--td);font-size:11px;font-weight:600;cursor:pointer;transition:.12s}
-.sea.active{border-color:var(--c);color:var(--c);background:rgba(0,245,255,.07)}
-.ep-list{flex:1;overflow-y:auto}
-.ep-list::-webkit-scrollbar{width:3px}
-.ep-list::-webkit-scrollbar-thumb{background:var(--b)}
-.ep-row{
-  display:flex;align-items:center;gap:8px;
-  padding:6px 12px;border-bottom:1px solid rgba(13,51,71,.5);cursor:pointer;transition:.12s;
-}
-.ep-row:hover{background:rgba(0,245,255,.05)}
-.ep-row.active{background:rgba(0,245,255,.09);border-left:2px solid var(--c)}
-.ep-n{font-size:10px;color:var(--td);width:24px;flex-shrink:0}
-.ep-nm{font-size:12px;font-weight:600;flex:1}
-.ep-d{font-size:10px;color:var(--td)}
+  <!-- HOME / CATEGORIA SELECTOR (primeiro estado) -->
+  <div class="home-panel" id="home-panel">
+    <div class="home-title" id="home-title">SELECIONE UMA CATEGORIA</div>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
 
-/* ── NOW PLAYING ── */
-.now{padding:10px 14px;background:var(--s);border-top:1px solid var(--b);flex-shrink:0}
-.now-n{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.now-g{font-size:10px;color:var(--td);margin-top:2px;letter-spacing:1px}
+  <!-- PLAYER VIEW (quando canal selecionado) -->
+  <div class="player-view" id="player-view" style="display:none">
 
-/* ── ESTADOS ── */
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;gap:8px;color:var(--td);text-align:center}
-.state .ico{font-size:28px;opacity:.25}
-.state p{font-size:11px;letter-spacing:2px}
-.spin{width:24px;height:24px;border:2px solid var(--b);border-top-color:var(--c);border-radius:50%;animation:sp .7s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
+    <!-- COL ESQUERDA: lista de canais -->
+    <div class="ch-col">
+      <div class="ch-col-head">
+        <button class="ch-back" onclick="backToCats()">‹</button>
+        <span class="ch-cat-name" id="ch-cat-name">CATEGORIA</span>
+        <button class="ch-fwd" onclick="nextCat()">›</button>
+      </div>
+      <div class="ch-search-wrap">
+        <input class="ch-search" id="ch-search" type="text" placeholder="🔍 Buscar..." oninput="filterItems(this.value)">
+      </div>
+      <div class="ch-list" id="ch-list"></div>
+    </div>
 
-/* ── TOAST ── */
-.toast{
-  position:fixed;bottom:16px;right:16px;z-index:999;
-  background:var(--s2);border:1px solid var(--c);color:var(--c);
-  padding:8px 16px;font-size:11px;letter-spacing:1px;
-  transform:translateY(50px);opacity:0;transition:.25s;
-}
-.toast.show{transform:none;opacity:1}
-.toast.err{border-color:var(--acc);color:var(--acc)}
-.toast.ok{border-color:var(--g);color:var(--g)}
+    <!-- COL CENTRO: player -->
+    <div class="mid-col">
+      <div class="player-box">
+        <video id="video" controls autoplay playsinline></video>
+        <div class="idle" id="idle">
+          <div class="idle-logo">
+            <svg width="48" height="48" viewBox="0 0 28 28" fill="none">
+              <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+              <polygon points="14,6 22,10 22,18 14,22 6,18 6,10" fill="rgba(0,200,255,0.1)" stroke="#00c8ff" stroke-width="1"/>
+              <text x="14" y="17" text-anchor="middle" fill="#00c8ff" font-size="8" font-weight="bold" font-family="Arial">TV</text>
+            </svg>
+            <div class="idle-brand">TRON<span>IPTV</span></div>
+          </div>
+          <p>Selecione um canal para assistir</p>
+        </div>
+      </div>
 
-/* ── MOBILE ── */
-@media(max-width:640px){
-  html,body{overflow:auto;height:auto}
-  .workspace{position:static;grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
-  .col-cats,.col-items{max-height:180px}
-  .player-wrap{max-height:none;aspect-ratio:16/9}
-  #srch{width:120px}
-}
+      <!-- barra de qualidade -->
+      <div class="q-bar" id="q-bar">
+        <span class="q-label">QUALIDADE</span>
+        <button class="q-btn active" id="q-auto" onclick="setQ('auto',this)">AUTO</button>
+        <button class="q-btn" id="q-sd"   onclick="setQ('sd',this)">SD</button>
+        <button class="q-btn" id="q-hd"   onclick="setQ('hd',this)">HD</button>
+        <button class="q-btn" id="q-fhd"  onclick="setQ('fhd',this)">FULL HD</button>
+        <button class="q-fs"  onclick="goFull()">⛶ TELA CHEIA</button>
+      </div>
+
+      <!-- episódios (séries) -->
+      <div class="ep-box" id="ep-box" style="display:none">
+        <div class="ep-box-head">
+          <span id="ep-box-title"></span>
+          <button onclick="closeEp()">✕</button>
+        </div>
+        <div class="ep-seasons" id="ep-seasons"></div>
+        <div class="ep-rows" id="ep-rows"></div>
+      </div>
+    </div>
+
+    <!-- COL DIREITA: info -->
+    <div class="info-col" id="info-col">
+      <div class="info-badge" id="info-badge">AO VIVO</div>
+      <div class="info-name" id="info-name">—</div>
+      <div class="info-group" id="info-group"></div>
+      <div class="info-thumb" id="info-thumb"></div>
+      <div class="info-desc" id="info-desc"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
