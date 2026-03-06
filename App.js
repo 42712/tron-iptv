@@ -1,498 +1,366 @@
-// ══════════════════════════════════════════════
-//  GUARD
-// ══════════════════════════════════════════════
-const SESSION = (function () {
+// ── SESSÃO ──────────────────────────────────
+const S = (() => {
   try {
-    return (
-      JSON.parse(localStorage.getItem('tron_session')   || 'null') ||
-      JSON.parse(sessionStorage.getItem('tron_session') || 'null')
-    );
-  } catch (_) { return null; }
+    return JSON.parse(localStorage.getItem('tron_session') || 'null') ||
+           JSON.parse(sessionStorage.getItem('tron_session') || 'null');
+  } catch { return null; }
 })();
-if (!SESSION || !SESSION.server || !SESSION.user || !SESSION.pass) {
-  window.location.replace('index.html');
-}
-const S = SESSION || {};
+if (!S?.server) { window.location.replace('index.html'); }
 
-// ══════════════════════════════════════════════
-//  CORS PROXY POOL
-// ══════════════════════════════════════════════
-const PROXIES = [
-  u => u,                                                                     // direto
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,        // allorigins
-  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,                 // corsproxy
-  u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,                 // cors.lol
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,   // codetabs
+// ── PROXY POOL ───────────────────────────────
+const PX = [
+  u => u,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
 ];
 
-async function fetchAPI(action, extra = '') {
+async function api(action, extra = '') {
   const raw = `${S.server}/player_api.php?username=${S.user}&password=${S.pass}&action=${action}${extra}`;
-  for (let i = 0; i < PROXIES.length; i++) {
+  for (let i = 0; i < PX.length; i++) {
     try {
-      const res = await fetch(PROXIES[i](raw), { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text || text.trim() === '') continue;
-      const data = JSON.parse(text);
-      console.info(`[proxy #${i}] OK — ${action}`);
-      return data;
-    } catch (e) {
-      console.warn(`[proxy #${i}] falhou:`, e.message);
-    }
+      const r = await fetch(PX[i](raw), { signal: AbortSignal.timeout(12000) });
+      if (!r.ok) continue;
+      const txt = await r.text();
+      if (!txt?.trim()) continue;
+      const d = JSON.parse(txt);
+      return d;
+    } catch (e) { console.warn('proxy', i, e.message); }
   }
-  throw new Error('Servidor inacessível. Verifique URL, usuário e senha.');
+  throw new Error('Servidor inacessível');
 }
 
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-let currentSection = 'live';
-let currentUrl     = null;
-let activeItem     = null;
-let allItems       = [];
-let hlsInstance    = null;
-let retryTimer     = null;
-let retryCount     = 0;
-const MAX_RETRY    = 5;
+// ── ESTADO ──────────────────────────────────
+let section = 'live';
+let cats    = [];      // [{cat_id, category_name}]
+let streams = [];      // todos os streams carregados
+let activeCat  = null;
+let activeUrl  = null;
+let hls        = null;
+let retries    = 0;
 
-// ══════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  try {
-    const host = new URL(S.server).hostname;
-    document.getElementById('server-info').textContent = host;
-  } catch (_) {}
-  updateFavCount();
+// ── INIT ─────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
   navTo('live');
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 });
 
-// ══════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════
-function toast(msg, type = 'info', ms = 3000) {
+// ── TOAST ────────────────────────────────────
+function toast(msg, cls = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className = 'toast show ' + type;
+  el.className = 'toast show ' + cls;
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), ms);
+  el._t = setTimeout(() => el.className = 'toast', 2800);
 }
 
-// ══════════════════════════════════════════════
-//  FAVORITOS
-// ══════════════════════════════════════════════
-function getFavs()        { try { return JSON.parse(localStorage.getItem('tron_favs') || '[]'); } catch { return []; } }
-function saveFavs(arr)    { localStorage.setItem('tron_favs', JSON.stringify(arr)); updateFavCount(); }
-function isFaved(id)      { return getFavs().some(f => f._id === id); }
-function updateFavCount() {
-  const n = getFavs().length;
-  const el = document.getElementById('cnt-favs');
-  if (el) el.textContent = n || '';
-}
+// ── FAVORITOS ────────────────────────────────
+const getFavs  = () => { try { return JSON.parse(localStorage.getItem('tfavs') || '[]'); } catch { return []; } };
+const saveFavs = a  => localStorage.setItem('tfavs', JSON.stringify(a));
+const isFav    = id => getFavs().some(f => f._id === id);
 function toggleFav(item) {
-  let favs = getFavs();
-  const idx = favs.findIndex(f => f._id === item._id);
-  if (idx >= 0) { favs.splice(idx, 1); saveFavs(favs); toast('Removido dos favoritos', 'error'); return false; }
-  favs.push(item); saveFavs(favs); toast('⭐ Adicionado aos favoritos', 'success'); return true;
+  let f = getFavs();
+  const i = f.findIndex(x => x._id === item._id);
+  if (i >= 0) { f.splice(i, 1); saveFavs(f); toast('Removido', 'err'); return false; }
+  f.push(item); saveFavs(f); toast('⭐ Adicionado!', 'ok'); return true;
 }
 
-// ══════════════════════════════════════════════
-//  COUNTERS
-// ══════════════════════════════════════════════
-function setCount(section, n) {
-  const map = { live: 'cnt-live', movies: 'cnt-movies', series: 'cnt-series' };
-  const el = document.getElementById(map[section]);
-  if (el) el.textContent = n || '';
-  document.getElementById('section-count').textContent = n + ' itens';
+// ── NAVEGAÇÃO ────────────────────────────────
+function navTo(s) {
+  section = s;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+  document.getElementById('srch').value = '';
+  activeCat = null;
+  closeEp();
+  resetItemList();
+
+  if (s === 'favs') { showFavs(); return; }
+  loadSection(s);
 }
 
-// ══════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════
-function navTo(section) {
-  currentSection = section;
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.section === section));
-  document.getElementById('search-input').value = '';
-  closeEpPanel();
-  const titles = { live:'CANAIS AO VIVO', movies:'FILMES', series:'SÉRIES', favs:'FAVORITOS' };
-  document.getElementById('section-title').textContent = titles[section] || '';
-  if (section === 'live')        loadLive();
-  else if (section === 'movies') loadMovies();
-  else if (section === 'series') loadSeries();
-  else if (section === 'favs')   loadFavs();
+async function loadSection(s) {
+  setCatLoad();
+  try {
+    if (s === 'live') {
+      // categorias + streams em paralelo
+      const [cData, sData] = await Promise.all([
+        api('get_live_categories'),
+        api('get_live_streams'),
+      ]);
+      cats    = Array.isArray(cData) ? cData : [];
+      streams = Array.isArray(sData) ? sData.map(c => ({
+        _id:   'l_' + c.stream_id,
+        name:  c.name || '—',
+        url:   `${S.server}/live/${S.user}/${S.pass}/${c.stream_id}.m3u8`,
+        img:   c.stream_icon || '',
+        group: c.category_name || '',
+        cat:   String(c.category_id || ''),
+        type:  'live',
+      })) : [];
+    } else if (s === 'movies') {
+      const [cData, sData] = await Promise.all([
+        api('get_vod_categories'),
+        api('get_vod_streams'),
+      ]);
+      cats    = Array.isArray(cData) ? cData : [];
+      streams = Array.isArray(sData) ? sData.map(m => ({
+        _id:   'm_' + m.stream_id,
+        name:  m.name || '—',
+        url:   `${S.server}/movie/${S.user}/${S.pass}/${m.stream_id}.${m.container_extension || 'mp4'}`,
+        img:   m.stream_icon || '',
+        group: m.category_name || '',
+        cat:   String(m.category_id || ''),
+        type:  'movies',
+      })) : [];
+    } else if (s === 'series') {
+      const [cData, sData] = await Promise.all([
+        api('get_series_categories'),
+        api('get_series'),
+      ]);
+      cats    = Array.isArray(cData) ? cData : [];
+      streams = Array.isArray(sData) ? sData.map(s => ({
+        _id:       'sr_' + s.series_id,
+        name:      s.name || '—',
+        url:       null,
+        img:       s.cover || '',
+        group:     s.category_name || '',
+        cat:       String(s.category_id || ''),
+        type:      'series',
+        series_id: s.series_id,
+      })) : [];
+    }
+    renderCats();
+    toast(`✅ ${streams.length} itens`, 'ok');
+  } catch (e) {
+    document.getElementById('cat-list').innerHTML =
+      `<div class="state"><div class="ico">⚠️</div><p>${e.message}</p></div>`;
+    toast(e.message, 'err');
+  }
 }
 
-// ══════════════════════════════════════════════
-//  LIST RENDERING
-// ══════════════════════════════════════════════
-function escH(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// ── CATEGORIAS ───────────────────────────────
+function setCatLoad() {
+  document.getElementById('cat-list').innerHTML =
+    '<div class="state"><div class="spin"></div><p>CARREGANDO...</p></div>';
+  document.getElementById('item-list').innerHTML = '';
+  document.getElementById('items-head').textContent = 'SELECIONE UMA CATEGORIA';
 }
 
-function showLoading() {
-  document.getElementById('list-area').innerHTML =
-    '<div class="state-box"><div class="loader"></div><p>CARREGANDO...</p></div>';
-  document.getElementById('filter-bar').innerHTML = '';
-}
+function renderCats() {
+  const el = document.getElementById('cat-list');
+  el.innerHTML = '';
 
-function showEmpty(msg = 'NENHUM ITEM') {
-  document.getElementById('list-area').innerHTML =
-    `<div class="state-box"><div class="icon">🔍</div><p>${msg}</p></div>`;
-}
+  // "Todos" no topo
+  const all = mk('div', 'cat', 'Todos');
+  all.onclick = () => { setActiveCat(null, all); showItems(streams); };
+  el.appendChild(all);
 
-function showErr(msg) {
-  document.getElementById('list-area').innerHTML =
-    `<div class="state-box"><div class="icon">⚠️</div><p>${escH(msg)}</p></div>`;
-}
-
-// Renderiza lista vertical (uma linha por item)
-function renderList(items, type) {
-  const area = document.getElementById('list-area');
-  area.innerHTML = '';
-  if (!items.length) { showEmpty(); return; }
-
-  const frag = document.createDocumentFragment();
-
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'item-row' + (currentUrl === item.url ? ' active' : '');
-    div.dataset.id = item._id;
-
-    const isPortrait = type !== 'live';
-    const icon = type === 'live' ? '📺' : type === 'movies' ? '🎬' : '📂';
-    const faved = isFaved(item._id);
-
-    div.innerHTML = `
-      <div class="item-thumb ${isPortrait ? 'portrait' : ''}">
-        ${item.img
-          ? `<img src="${escH(item.img)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\"thumb-icon\\">${icon}</span>'">`
-          : `<span class="thumb-icon">${icon}</span>`}
-      </div>
-      <div class="item-info">
-        <div class="item-name">${escH(item.name)}</div>
-        ${item.group ? `<div class="item-meta">${escH(item.group)}</div>` : ''}
-      </div>
-      <div class="item-actions">
-        ${type === 'live' ? '<div class="live-dot"></div>' : ''}
-        <button class="fav-btn ${faved ? 'faved' : ''}"
-          title="Favorito"
-          onclick="handleFav(event,'${escH(item._id)}')">⭐</button>
-      </div>`;
-
-    div.addEventListener('click', (e) => {
-      if (e.target.classList.contains('fav-btn')) return;
-      if (type === 'series') { openSeries(item); return; }
-      // marca item ativo
-      document.querySelectorAll('.item-row').forEach(r => r.classList.remove('active'));
-      div.classList.add('active');
-      playItem(item, type);
-    });
-
-    frag.appendChild(div);
-  });
-
-  area.appendChild(frag);
-}
-
-function handleFav(e, id) {
-  e.stopPropagation();
-  const item = allItems.find(i => i._id === id) || getFavs().find(f => f._id === id);
-  if (!item) return;
-  const now = toggleFav(item);
-  e.currentTarget.classList.toggle('faved', now);
-  if (currentSection === 'favs') loadFavs();
-}
-
-// ══════════════════════════════════════════════
-//  FILTERS
-// ══════════════════════════════════════════════
-function renderFilters(items) {
-  const bar = document.getElementById('filter-bar');
-  const groups = [...new Set(items.map(i => i.group).filter(Boolean))].slice(0, 80);
-  bar.innerHTML = '';
-  if (!groups.length) return;
-
-  const all = document.createElement('button');
-  all.className = 'filter-chip active';
-  all.textContent = 'Todos';
-  all.onclick = () => { setChip(all); renderList(allItems, currentSection); };
-  bar.appendChild(all);
-
-  groups.forEach(g => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-chip';
-    btn.textContent = g;
-    btn.onclick = () => {
-      setChip(btn);
-      renderList(allItems.filter(i => i.group === g), currentSection);
+  cats.forEach(c => {
+    const d = mk('div', 'cat', c.category_name || '—');
+    d.dataset.id = c.category_id;
+    d.onclick = () => {
+      setActiveCat(c.category_id, d);
+      showItems(streams.filter(s => s.cat === String(c.category_id)));
     };
-    bar.appendChild(btn);
+    el.appendChild(d);
   });
 }
-function setChip(el) {
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+
+function setActiveCat(id, el) {
+  activeCat = id;
+  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
 
-// ══════════════════════════════════════════════
-//  SEARCH
-// ══════════════════════════════════════════════
+// ── ITENS ────────────────────────────────────
+function resetItemList() {
+  document.getElementById('item-list').innerHTML = '';
+  document.getElementById('items-head').textContent = 'SELECIONE UMA CATEGORIA';
+}
+
+function showItems(list) {
+  const el   = document.getElementById('item-list');
+  const head = document.getElementById('items-head');
+  head.textContent = list.length + ' itens';
+  el.innerHTML = '';
+  if (!list.length) { el.innerHTML = '<div class="state"><div class="ico">🔍</div><p>VAZIO</p></div>'; return; }
+
+  const isLive = section === 'live';
+  const isSer  = section === 'series';
+  const frag   = document.createDocumentFragment();
+
+  list.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'item' + (activeUrl === item.url ? ' active' : '');
+    d.dataset.id = item._id;
+
+    const imgH = item.img
+      ? `<img src="${esc(item.img)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : (isLive ? '📺' : isSer ? '📂' : '🎬');
+
+    d.innerHTML = `
+      <div class="item-img${isSer ? ' tall' : ''}">${imgH}</div>
+      <div class="item-txt">
+        <div class="item-name">${esc(item.name)}</div>
+        ${item.group ? `<div class="item-sub">${esc(item.group)}</div>` : ''}
+      </div>
+      ${isLive ? '<div class="dot-live"></div>' : ''}
+      <button class="fav ${isFav(item._id) ? 'on' : ''}"
+        onclick="hFav(event,'${esc(item._id)}')">⭐</button>`;
+
+    d.addEventListener('click', e => {
+      if (e.target.classList.contains('fav')) return;
+      if (isSer) { openSeries(item); return; }
+      document.querySelectorAll('.item').forEach(x => x.classList.remove('active'));
+      d.classList.add('active');
+      startPlay(item);
+    });
+
+    frag.appendChild(d);
+  });
+  el.appendChild(frag);
+}
+
+function hFav(e, id) {
+  e.stopPropagation();
+  const item = streams.find(i => i._id === id) || getFavs().find(f => f._id === id);
+  if (!item) return;
+  const on = toggleFav(item);
+  e.currentTarget.classList.toggle('on', on);
+  if (section === 'favs') showFavs();
+}
+
+// ── BUSCA ────────────────────────────────────
 function doSearch(q) {
-  if (!allItems.length) return;
-  const lq = q.toLowerCase().trim();
-  const filtered = lq ? allItems.filter(i => i.name.toLowerCase().includes(lq)) : allItems;
-  renderList(filtered, currentSection);
+  if (section === 'favs') { showItems(getFavs().filter(f => f.name?.toLowerCase().includes(q.toLowerCase()))); return; }
+  if (!streams.length) return;
+  const lq = q.toLowerCase();
+  const base = activeCat ? streams.filter(s => s.cat === String(activeCat)) : streams;
+  showItems(lq ? base.filter(s => s.name.toLowerCase().includes(lq)) : base);
 }
 
-// ══════════════════════════════════════════════
-//  PLAYER
-// ══════════════════════════════════════════════
-function playItem(item, type) {
-  currentUrl = item.url;
-  activeItem = item;
-
-  // now-info
-  const ni = document.getElementById('now-info');
-  ni.style.display = 'block';
-  document.getElementById('now-name').textContent  = item.name;
-  document.getElementById('now-group').textContent = item.group || '';
-
-  play(item.url, item.name, type === 'live');
+// ── PLAYER ───────────────────────────────────
+function startPlay(item) {
+  activeUrl = item.url;
+  document.getElementById('now').style.display = 'block';
+  document.getElementById('now-n').textContent = item.name;
+  document.getElementById('now-g').textContent = item.group || '';
+  playUrl(item.url, item.name, item.type === 'live');
 }
 
-function play(url, name, isLive) {
-  clearTimeout(retryTimer);
-  retryCount = 0;
-  currentUrl = url;
+function playUrl(url, name, isLive) {
+  retries = 0;
+  const v = document.getElementById('video');
+  document.getElementById('idle').style.display = 'none';
+  document.getElementById('pip').style.display  = 'flex';
+  document.getElementById('pip-name').textContent = name;
+  document.getElementById('pip-live').textContent = isLive ? '🔴 AO VIVO' : '';
 
-  const video = document.getElementById('video');
-  document.getElementById('player-idle').style.display = 'none';
-
-  const piEl   = document.getElementById('player-info');
-  const nameEl = document.getElementById('player-info-name');
-  const dotEl  = document.getElementById('status-dot');
-  const txtEl  = document.getElementById('status-text');
-  piEl.style.display   = 'flex';
-  nameEl.textContent   = name || '';
-  dotEl.className      = 'dot' + (isLive ? ' live' : '');
-  txtEl.textContent    = isLive ? 'AO VIVO' : 'REPRODUZINDO';
-
-  if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+  if (hls) { hls.destroy(); hls = null; }
 
   if (url.includes('.m3u8') && Hls.isSupported()) {
-    hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true });
-    hlsInstance.loadSource(url);
-    hlsInstance.attachMedia(video);
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
-    hlsInstance.on(Hls.Events.ERROR, (_, d) => {
-      if (d.fatal && currentUrl === url) {
-        retryCount++;
-        if (retryCount <= MAX_RETRY) {
-          const delay = Math.min(retryCount * 2000, 8000);
-          toast(`Reconectando… (${retryCount}/${MAX_RETRY})`, 'error', delay);
-          retryTimer = setTimeout(() => play(url, name, isLive), delay);
-        } else {
-          toast('Não foi possível conectar ao stream', 'error');
-        }
+    hls = new Hls({ enableWorker: true });
+    hls.loadSource(url);
+    hls.attachMedia(v);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
+    hls.on(Hls.Events.ERROR, (_, d) => {
+      if (d.fatal && activeUrl === url) {
+        retries++;
+        if (retries <= 4) setTimeout(() => playUrl(url, name, isLive), retries * 2000);
+        else toast('Falha no stream', 'err');
       }
     });
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = url; video.play().catch(() => {});
   } else {
-    video.src = url; video.play().catch(() => {});
+    v.src = url; v.play().catch(() => {});
   }
 }
 
-function stopPlayer() {
-  if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-  clearTimeout(retryTimer);
-  const v = document.getElementById('video');
-  v.pause(); v.src = '';
-  document.getElementById('player-idle').style.display  = 'flex';
-  document.getElementById('player-info').style.display  = 'none';
-  document.getElementById('now-info').style.display     = 'none';
-  currentUrl = null; activeItem = null;
+// ── SÉRIES ───────────────────────────────────
+async function openSeries(item) {
+  document.querySelectorAll('.item').forEach(x => x.classList.remove('active'));
+  const row = document.querySelector(`.item[data-id="${item._id}"]`);
+  if (row) row.classList.add('active');
+
+  const ew = document.getElementById('ep-wrap');
+  document.getElementById('ep-title').textContent = item.name;
+  document.getElementById('seasons').innerHTML = '<div class="spin" style="margin:6px auto"></div>';
+  document.getElementById('ep-list').innerHTML = '';
+  ew.style.display = 'flex';
+
+  try {
+    const d   = await api('get_series_info', '&series_id=' + item.series_id);
+    const eps = d.episodes || {};
+    const ss  = Object.keys(eps).sort((a, b) => +a - +b);
+    const sEl = document.getElementById('seasons');
+    sEl.innerHTML = '';
+    if (!ss.length) { document.getElementById('ep-list').innerHTML = '<div class="state"><p>SEM EPISÓDIOS</p></div>'; return; }
+    ss.forEach((s, i) => {
+      const b = mk('button', 'sea' + (i === 0 ? ' active' : ''), 'T' + s);
+      b.onclick = () => { document.querySelectorAll('.sea').forEach(x => x.classList.remove('active')); b.classList.add('active'); renderEps(eps[s], item.name); };
+      sEl.appendChild(b);
+    });
+    renderEps(eps[ss[0]], item.name);
+  } catch (e) {
+    document.getElementById('ep-list').innerHTML = `<div class="state"><p>${e.message}</p></div>`;
+  }
 }
 
-// ══════════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════════
+function renderEps(eps, sname) {
+  const el = document.getElementById('ep-list');
+  el.innerHTML = '';
+  if (!eps?.length) { el.innerHTML = '<div class="state"><p>VAZIO</p></div>'; return; }
+  const frag = document.createDocumentFragment();
+  eps.forEach(ep => {
+    const url = `${S.server}/series/${S.user}/${S.pass}/${ep.id}.${ep.container_extension || 'mkv'}`;
+    const d   = document.createElement('div');
+    d.className = 'ep-row' + (activeUrl === url ? ' active' : '');
+    d.innerHTML = `<span class="ep-n">E${ep.episode_num}</span><span class="ep-nm">${esc(ep.title || 'Ep.' + ep.episode_num)}</span>${ep.info?.duration ? `<span class="ep-d">${ep.info.duration}</span>` : ''}`;
+    d.onclick = () => {
+      document.querySelectorAll('.ep-row').forEach(x => x.classList.remove('active'));
+      d.classList.add('active');
+      activeUrl = url;
+      document.getElementById('now').style.display = 'block';
+      document.getElementById('now-n').textContent = `${sname} · E${ep.episode_num}`;
+      document.getElementById('now-g').textContent = ep.title || '';
+      playUrl(url, `${sname} E${ep.episode_num}`, false);
+    };
+    frag.appendChild(d);
+  });
+  el.appendChild(frag);
+}
+
+function closeEp() { document.getElementById('ep-wrap').style.display = 'none'; }
+
+// ── FAVORITOS PAGE ───────────────────────────
+function showFavs() {
+  const f = getFavs();
+  document.getElementById('cat-list').innerHTML  = '<div class="cat active">⭐ Todos favoritos</div>';
+  document.getElementById('items-head').textContent = f.length + ' favoritos';
+  showItems(f);
+}
+
+// ── LOGOUT ───────────────────────────────────
 function doLogout() {
   localStorage.removeItem('tron_session');
   sessionStorage.removeItem('tron_session');
-  stopPlayer();
+  if (hls) hls.destroy();
   window.location.href = 'index.html';
 }
 
-// ══════════════════════════════════════════════
-//  LOAD LIVE — usa getCategories + streams lazy
-// ══════════════════════════════════════════════
-async function loadLive() {
-  showLoading();
-  try {
-    const data = await fetchAPI('get_live_streams');
-    if (!Array.isArray(data)) throw new Error('Resposta inválida');
-    allItems = data.map(c => ({
-      _id:   'l_' + c.stream_id,
-      name:  c.name || 'Canal',
-      url:   `${S.server}/live/${S.user}/${S.pass}/${c.stream_id}.m3u8`,
-      img:   c.stream_icon || '',
-      group: c.category_name || '',
-    }));
-    setCount('live', allItems.length);
-    renderFilters(allItems);
-    renderList(allItems, 'live');
-    toast(`✅ ${allItems.length} canais`, 'success', 2500);
-  } catch (e) { showErr(e.message); toast(e.message, 'error'); }
+// ── UTILS ────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function mk(tag, cls, txt) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  if (txt) el.textContent = txt;
+  return el;
 }
 
-// ══════════════════════════════════════════════
-//  LOAD MOVIES
-// ══════════════════════════════════════════════
-async function loadMovies() {
-  showLoading();
-  try {
-    const data = await fetchAPI('get_vod_streams');
-    if (!Array.isArray(data)) throw new Error('Resposta inválida');
-    allItems = data.map(m => ({
-      _id:   'm_' + m.stream_id,
-      name:  m.name || 'Filme',
-      url:   `${S.server}/movie/${S.user}/${S.pass}/${m.stream_id}.${m.container_extension || 'mp4'}`,
-      img:   m.stream_icon || '',
-      group: m.category_name || '',
-    }));
-    setCount('movies', allItems.length);
-    renderFilters(allItems);
-    renderList(allItems, 'movies');
-    toast(`✅ ${allItems.length} filmes`, 'success', 2500);
-  } catch (e) { showErr(e.message); toast(e.message, 'error'); }
-}
-
-// ══════════════════════════════════════════════
-//  LOAD SERIES
-// ══════════════════════════════════════════════
-async function loadSeries() {
-  showLoading();
-  try {
-    const data = await fetchAPI('get_series');
-    if (!Array.isArray(data)) throw new Error('Resposta inválida');
-    allItems = data.map(s => ({
-      _id:       's_' + s.series_id,
-      name:      s.name || 'Série',
-      url:       null,
-      img:       s.cover || (Array.isArray(s.backdrop_path) ? s.backdrop_path[0] : '') || '',
-      group:     s.category_name || '',
-      series_id: s.series_id,
-    }));
-    setCount('series', allItems.length);
-    renderFilters(allItems);
-    renderList(allItems, 'series');
-    toast(`✅ ${allItems.length} séries`, 'success', 2500);
-  } catch (e) { showErr(e.message); toast(e.message, 'error'); }
-}
-
-// ══════════════════════════════════════════════
-//  SERIES — EPISÓDIOS
-// ══════════════════════════════════════════════
-async function openSeries(item) {
-  // marca na lista
-  document.querySelectorAll('.item-row').forEach(r => r.classList.remove('active'));
-  const row = document.querySelector(`.item-row[data-id="${item._id}"]`);
-  if (row) row.classList.add('active');
-
-  const panel = document.getElementById('ep-panel');
-  document.getElementById('ep-series-name').textContent = item.name;
-  document.getElementById('season-tabs').innerHTML = '<div class="loader" style="margin:4px auto"></div>';
-  document.getElementById('ep-list').innerHTML = '';
-  panel.style.display = 'flex';
-
-  try {
-    const data = await fetchAPI('get_series_info', '&series_id=' + item.series_id);
-    const eps  = data.episodes || {};
-    const seasons = Object.keys(eps).sort((a, b) => +a - +b);
-    const tabs = document.getElementById('season-tabs');
-    tabs.innerHTML = '';
-    if (!seasons.length) {
-      document.getElementById('ep-list').innerHTML =
-        '<div style="color:var(--text-dim);padding:8px;font-size:12px;">Nenhum episódio</div>';
-      return;
-    }
-    seasons.forEach((s, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'season-tab' + (i === 0 ? ' active' : '');
-      btn.textContent = 'T' + s;
-      btn.onclick = () => {
-        document.querySelectorAll('.season-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        renderEps(eps[s], item.name);
-      };
-      tabs.appendChild(btn);
-    });
-    renderEps(eps[seasons[0]], item.name);
-  } catch (e) {
-    document.getElementById('ep-list').innerHTML =
-      `<div style="color:var(--accent);padding:8px;font-size:12px;">Erro: ${e.message}</div>`;
-  }
-}
-
-function renderEps(eps, seriesName) {
-  const list = document.getElementById('ep-list');
-  list.innerHTML = '';
-  if (!eps || !eps.length) {
-    list.innerHTML = '<div style="color:var(--text-dim);padding:8px;font-size:12px;">Sem episódios</div>';
-    return;
-  }
-  eps.forEach(ep => {
-    const url = `${S.server}/series/${S.user}/${S.pass}/${ep.id}.${ep.container_extension || 'mkv'}`;
-    const div = document.createElement('div');
-    div.className = 'ep-item' + (currentUrl === url ? ' active' : '');
-    div.innerHTML = `
-      <span class="ep-num">E${ep.episode_num}</span>
-      <span class="ep-name">${escH(ep.title || 'Episódio ' + ep.episode_num)}</span>
-      ${ep.info?.duration ? `<span class="ep-dur">${escH(ep.info.duration)}</span>` : ''}`;
-    div.onclick = () => {
-      document.querySelectorAll('.ep-item').forEach(e => e.classList.remove('active'));
-      div.classList.add('active');
-      const label = `${seriesName} · E${ep.episode_num}${ep.title ? ' — ' + ep.title : ''}`;
-      document.getElementById('now-info').style.display = 'block';
-      document.getElementById('now-name').textContent   = label;
-      document.getElementById('now-group').textContent  = '';
-      play(url, label, false);
-    };
-    list.appendChild(div);
-  });
-}
-
-function closeEpPanel() {
-  document.getElementById('ep-panel').style.display = 'none';
-}
-
-// ══════════════════════════════════════════════
-//  FAVORITOS PAGE
-// ══════════════════════════════════════════════
-function loadFavs() {
-  allItems = getFavs();
-  updateFavCount();
-  document.getElementById('filter-bar').innerHTML = '';
-  document.getElementById('section-count').textContent = allItems.length + ' itens';
-  if (!allItems.length) { showEmpty('NENHUM FAVORITO AINDA'); return; }
-  renderList(allItems, 'live');
-}
-
-// ══════════════════════════════════════════════
-//  KEYBOARD
-// ══════════════════════════════════════════════
+// ── TECLADO ──────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'f' || e.key === 'F') {
-    const v = document.getElementById('video');
-    if (v.requestFullscreen) v.requestFullscreen();
-  }
-  if (e.key === ' ') {
-    const v = document.getElementById('video');
-    if (v.src || v.currentSrc) { e.preventDefault(); v.paused ? v.play() : v.pause(); }
-  }
-  if (e.key === 'Escape') closeEpPanel();
+  if (e.key === ' ') { const v = document.getElementById('video'); if (v.src) { e.preventDefault(); v.paused ? v.play() : v.pause(); } }
+  if (e.key === 'f') { const v = document.getElementById('video'); if (v.requestFullscreen) v.requestFullscreen(); }
+  if (e.key === 'Escape') closeEp();
 });
