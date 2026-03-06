@@ -5,96 +5,71 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TRON IPTV</title>
 <link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
 
-<!-- ══ TOP BAR ══ -->
-<header class="topbar">
-  <div class="topbar-logo">TRON<span>IPTV</span></div>
-
-  <nav class="topbar-nav">
-    <button class="nav-btn active" data-section="live"   onclick="navTo('live')">📺 Canais <span class="nav-count" id="cnt-live"></span></button>
-    <button class="nav-btn"        data-section="movies" onclick="navTo('movies')">🎬 Filmes <span class="nav-count" id="cnt-movies"></span></button>
-    <button class="nav-btn"        data-section="series" onclick="navTo('series')">📂 Séries <span class="nav-count" id="cnt-series"></span></button>
-    <button class="nav-btn"        data-section="favs"   onclick="navTo('favs')">⭐ Favoritos <span class="nav-count" id="cnt-favs"></span></button>
+<header class="bar">
+  <div class="logo">TRON<em>IPTV</em></div>
+  <nav class="tabs">
+    <button class="tab active" data-s="live"   onclick="navTo('live')">📺 Canais</button>
+    <button class="tab"        data-s="movies" onclick="navTo('movies')">🎬 Filmes</button>
+    <button class="tab"        data-s="series" onclick="navTo('series')">📂 Séries</button>
+    <button class="tab"        data-s="favs"   onclick="navTo('favs')">⭐ Favoritos</button>
   </nav>
-
-  <div class="topbar-right">
-    <div class="search-wrap">
-      <span class="search-ico">🔍</span>
-      <input id="search-input" type="text" placeholder="Buscar..." oninput="doSearch(this.value)">
-    </div>
-    <span class="server-info" id="server-info"></span>
-    <button class="btn-logout" onclick="doLogout()">⏻ Sair</button>
+  <div class="bar-right">
+    <input id="srch" type="text" placeholder="🔍 Buscar..." oninput="doSearch(this.value)">
+    <button class="btn-out" onclick="doLogout()">Sair</button>
   </div>
 </header>
 
-<!-- ══ MAIN LAYOUT: lista esquerda | player direita ══ -->
 <div class="workspace">
 
-  <!-- COLUNA ESQUERDA — lista + filtros -->
-  <aside class="panel-left">
+  <!-- COL 1: categorias -->
+  <div class="col col-cats" id="col-cats">
+    <div class="col-head">CATEGORIAS</div>
+    <div class="col-body" id="cat-list"></div>
+  </div>
 
-    <div class="filter-bar" id="filter-bar"></div>
+  <!-- COL 2: itens -->
+  <div class="col col-items" id="col-items">
+    <div class="col-head" id="items-head">SELECIONE UMA CATEGORIA</div>
+    <div class="col-body" id="item-list"></div>
+  </div>
 
-    <div class="section-header">
-      <span id="section-title">CANAIS AO VIVO</span>
-      <span class="item-count" id="section-count">—</span>
-    </div>
-
-    <div class="list-area" id="list-area">
-      <!-- itens renderizados aqui -->
-    </div>
-
-  </aside>
-
-  <!-- COLUNA DIREITA — player fixo -->
-  <div class="panel-right">
-
-    <div class="player-box" id="player-box">
+  <!-- COL 3: player -->
+  <div class="col col-player">
+    <div class="player-wrap">
       <video id="video" controls autoplay playsinline></video>
-
-      <!-- idle overlay -->
-      <div class="player-idle" id="player-idle">
-        <div class="idle-icon">📺</div>
-        <p>Selecione um item para reproduzir</p>
+      <div class="idle" id="idle">
+        <span>▶</span>
+        <p>Selecione um canal</p>
       </div>
-
-      <!-- info bar -->
-      <div class="player-info" id="player-info" style="display:none">
-        <div class="player-info-name" id="player-info-name"></div>
-        <div class="player-info-status" id="player-info-status">
-          <span class="dot" id="status-dot"></span>
-          <span id="status-text"></span>
-        </div>
+      <div class="pip" id="pip" style="display:none">
+        <div class="pip-name" id="pip-name"></div>
+        <div class="pip-live" id="pip-live"></div>
       </div>
     </div>
 
-    <!-- episódios (séries) -->
-    <div class="ep-panel" id="ep-panel" style="display:none">
-      <div class="ep-header">
-        <span class="ep-series-name" id="ep-series-name"></span>
-        <button class="ep-close" onclick="closeEpPanel()">✕</button>
+    <!-- painel episódios -->
+    <div class="ep-wrap" id="ep-wrap" style="display:none">
+      <div class="ep-top">
+        <span class="ep-title" id="ep-title"></span>
+        <button onclick="closeEp()">✕</button>
       </div>
-      <div class="season-tabs" id="season-tabs"></div>
+      <div class="seasons" id="seasons"></div>
       <div class="ep-list" id="ep-list"></div>
     </div>
 
-    <!-- agora tocando / info extra -->
-    <div class="now-info" id="now-info" style="display:none">
-      <div class="now-label">REPRODUZINDO</div>
-      <div class="now-name" id="now-name"></div>
-      <div class="now-group" id="now-group"></div>
+    <div class="now" id="now" style="display:none">
+      <div class="now-n" id="now-n"></div>
+      <div class="now-g" id="now-g"></div>
     </div>
-
   </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script src="app.js"></script>
 </body>
 </html>
