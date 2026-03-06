@@ -1,482 +1,425 @@
-/* ══════════════════════════════════════════
-   TRON IPTV — app.html styles
-   ══════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   TRON IPTV — style.css
+   Layout: lista esquerda | player direita
+   ════════════════════════════════════════════ */
 
 :root {
-  --cyan:        #00f5ff;
-  --cyan-dim:    #00c8d4;
-  --bg:          #030a0f;
-  --bg2:         #050e14;
-  --bg3:         #071520;
-  --surface:     #0a1f2e;
-  --surface2:    #0d2538;
-  --border:      #0f3d52;
-  --border-hi:   #1a6070;
-  --text:        #c8e8ef;
-  --text-dim:    #6a9aaa;
-  --accent:      #ff4d6d;
-  --gold:        #ffd166;
-  --green:       #00ff88;
+  --cyan:      #00f5ff;
+  --cyan-dim:  #00b8c4;
+  --bg:        #030a0f;
+  --bg2:       #050e15;
+  --bg3:       #07141e;
+  --surface:   #091c28;
+  --surface2:  #0b2233;
+  --border:    #0e3448;
+  --border-hi: #175a72;
+  --text:      #c2e4ee;
+  --text-dim:  #527888;
+  --accent:    #ff4060;
+  --gold:      #ffd060;
+  --green:     #00e87a;
+  --topbar-h:  52px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
-
-body {
+html, body {
+  height: 100%;
+  overflow: hidden;          /* sem scroll na página, cada painel rola por conta */
   background: var(--bg);
   color: var(--text);
   font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
-  min-height: 100vh;
-  overflow-x: hidden;
+  font-size: 14px;
 }
 
-/* scanlines */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,245,255,0.013) 2px, rgba(0,245,255,0.013) 4px
-  );
-  pointer-events: none; z-index: 9999;
-}
-
-/* grid bg */
+/* scanlines sutis */
 body::after {
   content: '';
-  position: fixed; inset: 0;
-  background-image:
-    linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none; z-index: 0;
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,245,255,0.01) 3px, rgba(0,245,255,0.01) 4px
+  );
 }
 
-/* ── TOP BAR ────────────────────────────── */
+/* ── TOPBAR ──────────────────────────────── */
 .topbar {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 11px 20px;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--topbar-h);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 50;
-  gap: 14px; flex-wrap: wrap;
-  position: relative; z-index: 10;
+  border-bottom: 1px solid var(--border-hi);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
 
 .topbar-logo {
-  font-size: 22px; font-weight: 700;
-  letter-spacing: 5px; color: var(--cyan);
-  text-shadow: 0 0 10px rgba(0,245,255,0.5);
-  flex-shrink: 0;
+  font-size: 20px; font-weight: 700; letter-spacing: 4px;
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(0,245,255,0.5);
+  flex-shrink: 0; white-space: nowrap;
 }
+.topbar-logo span { color: var(--text-dim); font-weight: 400; }
 
-.search-wrap {
-  flex: 1; max-width: 380px; position: relative;
-}
-.search-wrap input {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 14px 9px 36px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 13px; outline: none;
-  transition: border-color 0.2s;
-}
-.search-wrap input:focus { border-color: var(--cyan); }
-.search-wrap input::placeholder { color: #1e3d4d; }
-.search-icon {
-  position: absolute; left: 12px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px; pointer-events: none; color: var(--text-dim);
-}
-
-.topbar-right {
-  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-}
-
-.server-badge {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 10px; letter-spacing: 1px;
-  color: var(--text-dim);
-  max-width: 180px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
-}
-
-.logout-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 7px 14px;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 13px; letter-spacing: 1px;
-  cursor: pointer; transition: all 0.2s;
-}
-.logout-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── LAYOUT ─────────────────────────────── */
-.main-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - 53px);
-  position: relative; z-index: 1;
-}
-
-/* ── SIDEBAR ────────────────────────────── */
-.sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 20px 0;
-  position: sticky; top: 53px;
-  height: calc(100vh - 53px);
-  overflow-y: auto;
-}
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
-
-.mobile-nav { display: none; }
-.desktop-nav { display: block; }
-
-.sidebar-section { padding: 0 14px; margin-bottom: 4px; }
-
-.sidebar-label {
-  display: block; padding: 8px 6px 6px;
-  font-size: 10px; font-weight: 700; letter-spacing: 3px;
-  text-transform: uppercase; color: var(--text-dim);
+.topbar-nav {
+  display: flex; gap: 2px; flex-shrink: 0;
 }
 
 .nav-btn {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 10px;
-  background: none; border: none;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: none; border: 1px solid transparent;
   color: var(--text-dim);
   font-family: 'Rajdhani', sans-serif;
-  font-size: 15px; font-weight: 600; letter-spacing: 1px;
-  cursor: pointer; text-align: left;
+  font-size: 14px; font-weight: 600; letter-spacing: 1px;
+  cursor: pointer; white-space: nowrap;
   transition: all 0.2s;
-  border-left: 2px solid transparent;
 }
-.nav-btn:hover { color: var(--text); background: rgba(0,245,255,0.05); }
-.nav-btn.active { color: var(--cyan); border-left-color: var(--cyan); background: rgba(0,245,255,0.07); }
-
-.nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-.nav-label { flex: 1; }
+.nav-btn:hover { color: var(--text); border-color: var(--border); }
+.nav-btn.active {
+  color: var(--cyan); border-color: var(--cyan);
+  background: rgba(0,245,255,0.07);
+}
 .nav-count {
   font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; color: var(--border-hi);
-  background: var(--bg3); padding: 2px 7px;
+  font-size: 10px; color: var(--border-hi);
+  background: var(--bg3); padding: 1px 6px;
+}
+.nav-btn.active .nav-count { color: var(--cyan-dim); }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
 
-.sidebar-divider { height: 1px; background: var(--border); margin: 14px; }
-
-/* ── CONTENT AREA ───────────────────────── */
-.content-area {
-  display: flex; flex-direction: column; overflow: hidden;
+.search-wrap { position: relative; }
+.search-wrap input {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 7px 12px 7px 30px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  outline: none; width: 200px; transition: border-color 0.2s, width 0.3s;
+}
+.search-wrap input:focus { border-color: var(--cyan); width: 240px; }
+.search-wrap input::placeholder { color: #1a3545; }
+.search-ico {
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; pointer-events: none; opacity: 0.4;
 }
 
-/* ── PLAYER ─────────────────────────────── */
-.player-wrap {
-  background: #000; position: relative;
-  border-bottom: 1px solid var(--border);
-}
-.player-wrap video {
-  width: 100%; max-height: 380px; display: block;
-}
-
-.player-overlay {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-}
-.player-idle-inner { text-align: center; color: var(--text-dim); }
-.idle-icon { font-size: 44px; opacity: 0.25; }
-.player-idle-inner p {
-  font-size: 11px; letter-spacing: 3px; margin-top: 10px;
-  opacity: 0.35; font-family: 'Share Tech Mono', monospace;
-}
-
-.now-playing {
-  position: absolute; bottom: 10px; left: 12px;
-  background: rgba(3,10,15,0.88);
-  border: 1px solid var(--border);
-  padding: 5px 12px;
-  font-size: 11px; color: var(--cyan); letter-spacing: 1px;
+.server-info {
   font-family: 'Share Tech Mono', monospace;
-  backdrop-filter: blur(4px);
-  max-width: 65%; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-  display: none;
+  font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.player-status {
-  position: absolute; top: 10px; right: 12px;
-  display: none; align-items: center; gap: 6px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; color: var(--text-dim);
-  background: rgba(3,10,15,0.75);
-  padding: 4px 10px; border: 1px solid var(--border);
-}
-.status-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--accent);
-}
-.status-dot.live { background: var(--green); animation: pulse 1.5s infinite; }
-@keyframes pulse {
-  0%,100% { opacity: 1; }
-  50%      { opacity: 0.3; }
-}
-
-/* ── EPISODES PANEL ─────────────────────── */
-.episodes-panel {
-  display: none; padding: 16px 20px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-}
-.ep-header {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-bottom: 12px;
-}
-.ep-title {
-  font-size: 16px; font-weight: 700;
-  letter-spacing: 2px; color: var(--cyan);
-}
-.ep-close {
+.btn-logout {
   background: none; border: 1px solid var(--border);
-  color: var(--text-dim); padding: 4px 10px;
-  cursor: pointer; font-size: 13px; transition: all 0.2s;
-  font-family: 'Rajdhani', sans-serif; font-weight: 600;
-}
-.ep-close:hover { border-color: var(--accent); color: var(--accent); }
-
-.season-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-.season-tab {
-  padding: 5px 14px; background: transparent;
-  border: 1px solid var(--border); color: var(--text-dim);
-  font-family: 'Rajdhani', sans-serif; font-size: 13px;
-  font-weight: 600; cursor: pointer; transition: all 0.2s;
-}
-.season-tab.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,245,255,0.07); }
-
-.ep-list {
-  display: flex; flex-direction: column; gap: 4px;
-  max-height: 220px; overflow-y: auto;
-}
-.ep-list::-webkit-scrollbar { width: 4px; }
-.ep-list::-webkit-scrollbar-thumb { background: var(--border); }
-
-.ep-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 12px;
-  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim); padding: 5px 12px;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
   cursor: pointer; transition: all 0.2s;
 }
-.ep-item:hover { border-color: var(--cyan); background: rgba(0,245,255,0.05); }
-.ep-item.playing { border-color: var(--cyan); background: rgba(0,245,255,0.08); }
+.btn-logout:hover { border-color: var(--accent); color: var(--accent); }
 
-.ep-num {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; color: var(--text-dim); width: 30px; flex-shrink: 0;
-}
-.ep-name { font-size: 14px; font-weight: 600; flex: 1; }
-.ep-dur { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); }
-
-/* ── CONTENT HEADER ─────────────────────── */
-.content-header {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  padding: 13px 20px 10px;
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap; gap: 8px;
-}
-.content-title {
-  font-size: 18px; font-weight: 700; letter-spacing: 3px;
-  color: var(--cyan); text-transform: uppercase;
-  display: flex; align-items: center; gap: 10px;
-}
-.content-title::before {
-  content: ''; display: block;
-  width: 3px; height: 20px;
-  background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
-}
-.content-info {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
+/* ── WORKSPACE ───────────────────────────── */
+.workspace {
+  position: fixed;
+  top: var(--topbar-h); left: 0; right: 0; bottom: 0;
+  display: grid;
+  grid-template-columns: 340px 1fr;
 }
 
-/* ── FILTER BAR ─────────────────────────── */
+/* ── PANEL LEFT — lista ──────────────────── */
+.panel-left {
+  display: flex; flex-direction: column;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow: hidden;             /* evita scroll duplo */
+  min-height: 0;
+}
+
+/* filter bar */
 .filter-bar {
-  display: flex; gap: 6px;
-  padding: 10px 20px;
+  display: flex; gap: 4px;
+  padding: 8px 10px;
+  background: var(--bg3);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto; background: var(--bg2);
-  scrollbar-width: none;
+  overflow-x: auto; flex-shrink: 0;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
-.filter-bar::-webkit-scrollbar { display: none; }
+.filter-bar::-webkit-scrollbar { height: 3px; }
+.filter-bar::-webkit-scrollbar-thumb { background: var(--border); }
 
 .filter-chip {
-  flex-shrink: 0; padding: 5px 14px;
+  flex-shrink: 0; padding: 3px 10px;
   background: transparent; border: 1px solid var(--border);
   color: var(--text-dim);
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 13px; font-weight: 600; letter-spacing: 1px;
-  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
 .filter-chip:hover { border-color: var(--cyan-dim); color: var(--text); }
 .filter-chip.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,245,255,0.07); }
 
-/* ── GRID ───────────────────────────────── */
-.grid-area {
-  flex: 1; overflow-y: auto; padding: 16px 20px;
+/* section header */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.grid-area::-webkit-scrollbar { width: 5px; }
-.grid-area::-webkit-scrollbar-thumb { background: var(--border); }
-
-#grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
+.section-header span:first-child {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--cyan);
 }
-
-/* ── CARD ───────────────────────────────── */
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  cursor: pointer; position: relative; overflow: hidden;
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-  display: flex; flex-direction: column;
-}
-.card:hover {
-  border-color: var(--cyan); transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,245,255,0.12);
-}
-.card.playing {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 1px var(--cyan), 0 0 20px rgba(0,245,255,0.2);
-}
-
-.card-img-wrap {
-  position: relative; aspect-ratio: 2/3;
-  overflow: hidden; background: var(--bg3);
-}
-.card-img-wrap.landscape { aspect-ratio: 16/9; }
-
-.card img {
-  width: 100%; height: 100%; object-fit: cover;
-  display: block; transition: transform 0.3s;
-}
-.card:hover img { transform: scale(1.04); }
-
-.card-no-img {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 30px; color: var(--border-hi); background: var(--bg3);
-}
-
-.card-play-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,245,255,0.1);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity 0.2s; font-size: 30px;
-}
-.card:hover .card-play-overlay { opacity: 1; }
-
-.card-live-badge {
-  position: absolute; top: 6px; left: 6px;
-  background: var(--accent); color: #fff;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 9px; letter-spacing: 1px; padding: 2px 6px;
-}
-
-.card-body {
-  padding: 8px 10px 6px; flex: 1;
-  display: flex; flex-direction: column; gap: 3px;
-}
-.card-name {
-  font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text);
-  display: -webkit-box; -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden;
-}
-.card-meta {
+.item-count {
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px; color: var(--text-dim);
 }
 
-.card-footer {
-  display: flex; align-items: center; justify-content: flex-end;
-  padding: 2px 8px 8px;
+/* list area — rola verticalmente */
+.list-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
+.list-area::-webkit-scrollbar { width: 4px; }
+.list-area::-webkit-scrollbar-track { background: transparent; }
+.list-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── ITEM ROW (coluna) ───────────────────── */
+.item-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(14,52,72,0.5);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.item-row:hover { background: rgba(0,245,255,0.04); }
+.item-row.active {
+  background: rgba(0,245,255,0.08);
+  border-left: 2px solid var(--cyan);
+}
+
+.item-thumb {
+  width: 48px; height: 36px; flex-shrink: 0;
+  background: var(--bg3); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.item-thumb.portrait { width: 36px; height: 54px; }
+.item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.item-thumb .thumb-icon { font-size: 18px; opacity: 0.4; }
+
+.item-info { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.item-meta {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text-dim); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.item-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .fav-btn {
   background: none; border: none; cursor: pointer;
-  font-size: 14px; color: var(--text-dim); padding: 4px;
-  transition: all 0.2s; line-height: 1;
+  font-size: 13px; color: var(--text-dim); padding: 3px;
+  line-height: 1; transition: all 0.15s;
 }
 .fav-btn:hover { color: var(--gold); transform: scale(1.2); }
 .fav-btn.faved { color: var(--gold); }
 
-/* ── STATE BOXES ────────────────────────── */
-.state-box {
-  grid-column: 1/-1;
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  animation: blink 1.8s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+/* ── PANEL RIGHT — player ────────────────── */
+.panel-right {
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  overflow: hidden; min-height: 0;
+}
+
+/* player box — ocupa o espaço disponível proporcional */
+.player-box {
+  position: relative;
+  background: #000;
+  flex: 0 0 auto;           /* tamanho natural pelo aspect-ratio */
+  aspect-ratio: 16/9;
+  max-height: 55vh;         /* não passa de 55% da altura */
+  border-bottom: 1px solid var(--border);
+}
+
+.player-box video {
+  width: 100%; height: 100%; display: block; background: #000;
+}
+
+.player-idle {
+  position: absolute; inset: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 60px 20px; color: var(--text-dim);
-  gap: 12px; text-align: center;
+  background: var(--bg3); color: var(--text-dim);
+  gap: 10px;
 }
-.state-box .icon { font-size: 40px; opacity: 0.35; }
-.state-box p { font-size: 13px; letter-spacing: 2px; font-family: 'Share Tech Mono', monospace; }
+.idle-icon { font-size: 48px; opacity: 0.2; }
+.player-idle p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; opacity: 0.35;
+}
+
+.player-info {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 6px 12px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.player-info-name {
+  font-size: 13px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player-info-status {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--text-dim); flex-shrink: 0;
+}
+.dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
+.dot.live { background: var(--green); animation: blink 1.5s infinite; }
+
+/* episodes panel */
+.ep-panel {
+  flex-shrink: 0;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  max-height: 240px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ep-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ep-series-name {
+  font-size: 14px; font-weight: 700; letter-spacing: 2px; color: var(--cyan);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ep-close {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  padding: 2px 8px; cursor: pointer; font-size: 13px; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.ep-close:hover { border-color: var(--accent); color: var(--accent); }
+
+.season-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.season-tab {
+  padding: 3px 12px; background: transparent;
+  border: 1px solid var(--border); color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.season-tab.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,245,255,0.07); }
+
+.ep-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.ep-list::-webkit-scrollbar { width: 3px; }
+.ep-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+.ep-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; background: var(--surface);
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+}
+.ep-item:hover { border-color: var(--cyan); background: rgba(0,245,255,0.05); }
+.ep-item.active { border-color: var(--cyan); background: rgba(0,245,255,0.09); }
+.ep-num {
+  font-family: 'Share Tech Mono', monospace; font-size: 10px;
+  color: var(--text-dim); width: 26px; flex-shrink: 0;
+}
+.ep-name { font-size: 13px; font-weight: 600; flex: 1; }
+.ep-dur { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+/* now playing info */
+.now-info {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.now-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--cyan);
+  margin-bottom: 4px;
+}
+.now-name {
+  font-size: 15px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.now-group {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text-dim); margin-top: 2px;
+}
+
+/* ── ESTADOS ─────────────────────────────── */
+.state-box {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 40px 20px; gap: 10px;
+  color: var(--text-dim); text-align: center;
+}
+.state-box .icon { font-size: 32px; opacity: 0.3; }
+.state-box p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: 2px;
+}
 
 .loader {
-  width: 36px; height: 36px;
+  width: 28px; height: 28px;
   border: 2px solid var(--border); border-top-color: var(--cyan);
-  border-radius: 50%; animation: spin 0.8s linear infinite;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── TOAST ──────────────────────────────── */
+/* ── TOAST ───────────────────────────────── */
 .toast {
-  position: fixed; bottom: 24px; right: 24px;
+  position: fixed; bottom: 20px; right: 20px; z-index: 9000;
   background: var(--surface2); border: 1px solid var(--cyan);
-  color: var(--cyan); padding: 12px 20px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 12px; letter-spacing: 1px;
-  z-index: 9000;
-  transform: translateY(60px); opacity: 0;
-  transition: all 0.3s;
-  box-shadow: 0 0 20px rgba(0,245,255,0.15);
-  max-width: 320px;
+  color: var(--cyan); padding: 10px 18px;
+  font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px;
+  transform: translateY(60px); opacity: 0; transition: all 0.3s;
+  box-shadow: 0 0 16px rgba(0,245,255,0.15); max-width: 300px;
 }
 .toast.show { transform: translateY(0); opacity: 1; }
-.toast.error   { border-color: var(--accent);  color: var(--accent); }
-.toast.success { border-color: var(--green);   color: var(--green); }
+.toast.error   { border-color: var(--accent); color: var(--accent); }
+.toast.success { border-color: var(--green);  color: var(--green); }
 
-/* ── RESPONSIVE ─────────────────────────── */
-@media (max-width: 768px) {
-  .main-layout { grid-template-columns: 1fr; }
+/* ── RESPONSIVO (mobile) ─────────────────── */
+@media (max-width: 700px) {
+  html, body { overflow: auto; height: auto; }
 
-  .sidebar {
-    position: static; height: auto;
-    padding: 0; border-right: none;
-    border-bottom: 1px solid var(--border);
-    display: flex; overflow-x: auto; scrollbar-width: none;
+  .workspace {
+    position: static;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
   }
-  .sidebar::-webkit-scrollbar { display: none; }
 
-  .mobile-nav  { display: flex; flex-direction: row; padding: 0; margin: 0; }
-  .desktop-nav { display: none !important; }
-  .sidebar-divider { display: none; }
-
-  .nav-btn {
-    padding: 11px 14px;
-    border-left: none; border-bottom: 2px solid transparent;
-    white-space: nowrap; flex-direction: column;
-    gap: 3px; font-size: 11px;
+  .panel-left {
+    height: auto; overflow: visible;
+    border-right: none; border-bottom: 1px solid var(--border);
+    max-height: 50vh; overflow: hidden;
   }
-  .nav-btn .nav-icon { font-size: 18px; width: auto; }
-  .nav-btn .nav-count { display: none; }
-  .nav-btn.active { border-left-color: transparent; border-bottom-color: var(--cyan); }
 
-  #grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .panel-right { height: auto; }
 
-  .player-wrap video { max-height: 220px; }
+  .player-box {
+    aspect-ratio: 16/9; max-height: none;
+  }
+
+  .topbar-nav .nav-btn span:not(.nav-count) { display: none; }
+  .search-wrap input { width: 130px; }
+  .server-info { display: none; }
 }
