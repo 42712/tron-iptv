@@ -11,119 +11,88 @@
 </head>
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-logo">TRON</div>
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input id="search-input" type="text" placeholder="Buscar..." oninput="doSearch(this.value)">
-  </div>
+<!-- ══ TOP BAR ══ -->
+<header class="topbar">
+  <div class="topbar-logo">TRON<span>IPTV</span></div>
+
+  <nav class="topbar-nav">
+    <button class="nav-btn active" data-section="live"   onclick="navTo('live')">📺 Canais <span class="nav-count" id="cnt-live"></span></button>
+    <button class="nav-btn"        data-section="movies" onclick="navTo('movies')">🎬 Filmes <span class="nav-count" id="cnt-movies"></span></button>
+    <button class="nav-btn"        data-section="series" onclick="navTo('series')">📂 Séries <span class="nav-count" id="cnt-series"></span></button>
+    <button class="nav-btn"        data-section="favs"   onclick="navTo('favs')">⭐ Favoritos <span class="nav-count" id="cnt-favs"></span></button>
+  </nav>
+
   <div class="topbar-right">
-    <span class="server-badge" id="server-badge"></span>
-    <button class="logout-btn" onclick="doLogout()">⏻ SAIR</button>
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input id="search-input" type="text" placeholder="Buscar..." oninput="doSearch(this.value)">
+    </div>
+    <span class="server-info" id="server-info"></span>
+    <button class="btn-logout" onclick="doLogout()">⏻ Sair</button>
   </div>
-</div>
+</header>
 
-<div class="main-layout">
+<!-- ══ MAIN LAYOUT: lista esquerda | player direita ══ -->
+<div class="workspace">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <!-- COLUNA ESQUERDA — lista + filtros -->
+  <aside class="panel-left">
 
-    <!-- mobile nav (shown as tab bar on small screens) -->
-    <div class="sidebar-section mobile-nav">
-      <button class="nav-btn" data-section="live" onclick="navTo('live')">
-        <span class="nav-icon">📺</span><span class="nav-label">Canais</span>
-        <span class="nav-count" id="cnt-live">—</span>
-      </button>
-      <button class="nav-btn" data-section="movies" onclick="navTo('movies')">
-        <span class="nav-icon">🎬</span><span class="nav-label">Filmes</span>
-        <span class="nav-count" id="cnt-movies">—</span>
-      </button>
-      <button class="nav-btn" data-section="series" onclick="navTo('series')">
-        <span class="nav-icon">📂</span><span class="nav-label">Séries</span>
-        <span class="nav-count" id="cnt-series">—</span>
-      </button>
-      <button class="nav-btn" data-section="favs" onclick="navTo('favs')">
-        <span class="nav-icon">⭐</span><span class="nav-label">Favoritos</span>
-        <span class="nav-count" id="cnt-favs">—</span>
-      </button>
+    <div class="filter-bar" id="filter-bar"></div>
+
+    <div class="section-header">
+      <span id="section-title">CANAIS AO VIVO</span>
+      <span class="item-count" id="section-count">—</span>
     </div>
 
-    <!-- desktop sidebar nav -->
-    <div class="sidebar-section desktop-nav">
-      <span class="sidebar-label">Navegar</span>
-      <button class="nav-btn" data-section="live" onclick="navTo('live')">
-        <span class="nav-icon">📺</span><span class="nav-label">Canais ao Vivo</span>
-        <span class="nav-count" id="cnt-live2">—</span>
-      </button>
-      <button class="nav-btn" data-section="movies" onclick="navTo('movies')">
-        <span class="nav-icon">🎬</span><span class="nav-label">Filmes</span>
-        <span class="nav-count" id="cnt-movies2">—</span>
-      </button>
-      <button class="nav-btn" data-section="series" onclick="navTo('series')">
-        <span class="nav-icon">📂</span><span class="nav-label">Séries</span>
-        <span class="nav-count" id="cnt-series2">—</span>
-      </button>
+    <div class="list-area" id="list-area">
+      <!-- itens renderizados aqui -->
     </div>
 
-    <div class="sidebar-divider desktop-nav"></div>
-
-    <div class="sidebar-section desktop-nav">
-      <span class="sidebar-label">Coleção</span>
-      <button class="nav-btn" data-section="favs" onclick="navTo('favs')">
-        <span class="nav-icon">⭐</span><span class="nav-label">Favoritos</span>
-        <span class="nav-count" id="cnt-favs2">—</span>
-      </button>
-    </div>
   </aside>
 
-  <!-- CONTENT -->
-  <div class="content-area">
+  <!-- COLUNA DIREITA — player fixo -->
+  <div class="panel-right">
 
-    <!-- PLAYER -->
-    <div class="player-wrap">
+    <div class="player-box" id="player-box">
       <video id="video" controls autoplay playsinline></video>
-      <div class="player-overlay" id="player-idle">
-        <div class="player-idle-inner">
-          <div class="idle-icon">📺</div>
-          <p>SELECIONE UM ITEM PARA REPRODUZIR</p>
-        </div>
+
+      <!-- idle overlay -->
+      <div class="player-idle" id="player-idle">
+        <div class="idle-icon">📺</div>
+        <p>Selecione um item para reproduzir</p>
       </div>
-      <div class="now-playing" id="now-playing"></div>
-      <div class="player-status" id="player-status">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">AO VIVO</span>
+
+      <!-- info bar -->
+      <div class="player-info" id="player-info" style="display:none">
+        <div class="player-info-name" id="player-info-name"></div>
+        <div class="player-info-status" id="player-info-status">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text"></span>
+        </div>
       </div>
     </div>
 
-    <!-- EPISODES PANEL -->
-    <div class="episodes-panel" id="ep-panel">
+    <!-- episódios (séries) -->
+    <div class="ep-panel" id="ep-panel" style="display:none">
       <div class="ep-header">
-        <div class="ep-title" id="ep-title">Episódios</div>
-        <button class="ep-close" onclick="closeEpPanel()">✕ FECHAR</button>
+        <span class="ep-series-name" id="ep-series-name"></span>
+        <button class="ep-close" onclick="closeEpPanel()">✕</button>
       </div>
       <div class="season-tabs" id="season-tabs"></div>
       <div class="ep-list" id="ep-list"></div>
     </div>
 
-    <!-- CONTENT HEADER -->
-    <div class="content-header">
-      <div class="content-title" id="section-title">CANAIS AO VIVO</div>
-      <div class="content-info" id="section-info">—</div>
-    </div>
-
-    <!-- FILTER BAR -->
-    <div class="filter-bar" id="filter-bar"></div>
-
-    <!-- GRID -->
-    <div class="grid-area">
-      <div id="grid"></div>
+    <!-- agora tocando / info extra -->
+    <div class="now-info" id="now-info" style="display:none">
+      <div class="now-label">REPRODUZINDO</div>
+      <div class="now-name" id="now-name"></div>
+      <div class="now-group" id="now-group"></div>
     </div>
 
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script src="app.js"></script>
