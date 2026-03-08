@@ -87,7 +87,7 @@ function login(){
   rem?localStorage.setItem('tron_s',JSON.stringify(d)):(sessionStorage.setItem('tron_s',JSON.stringify(d)),localStorage.removeItem('tron_s'));
   document.getElementById('btn').disabled=true;
   document.getElementById('btxt').textContent='⏳  CONECTANDO...';
-  setTimeout(()=>location.href='player.html',300);
+  setTimeout(()=>location.href='app2.html',300);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName!=='BUTTON')login();});
 </script>
