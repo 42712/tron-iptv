@@ -1,87 +1,21 @@
-# TRON IPTV
-
-Player IPTV web moderno, leve e sem dependências de build. Compatível com servidores **Xtream Codes**.
-
----
-
-## Funcionalidades
-
-- **Login** com URL do servidor, usuário e senha (sessão salva automaticamente)
-- **Canais ao vivo** com badge LIVE e streaming HLS
-- **Filmes** com extensão de container automática
-- **Séries** com painel de temporadas e episódios
-- **Favoritos** persistidos no `localStorage`
-- **Busca** em tempo real por nome
-- **Filtros** por categoria/grupo
-- **Reconexão automática** com backoff exponencial (até 5 tentativas)
-- **Instalável como PWA** (funciona como app no celular/desktop)
-- **Responsivo** (mobile e desktop)
-- Atalhos de teclado: `Espaço` pausar/retomar · `F` fullscreen · `Esc` fechar painel
-
----
-
-## Tecnologias
-
-| Arquivo | Função |
-|---|---|
-| `index.html` | Estrutura HTML |
-| `style.css` | Estilos (tema cyberpunk/Tron) |
-| `app.js` | Toda a lógica da aplicação |
-| `manifest.json` | Configuração PWA |
-| `sw.js` | Service Worker (cache offline) |
-
-- [HLS.js](https://github.com/video-dev/hls.js/) — reprodução de streams `.m3u8`
-- [corsproxy.io](https://corsproxy.io) — proxy CORS para as chamadas à API Xtream
-
----
-
-## Como usar
-
-### Deploy no GitHub Pages
-
-1. Faça o fork ou clone deste repositório
-2. Vá em **Settings → Pages**
-3. Em **Source**, selecione `main` branch e pasta `/ (root)`
-4. Acesse o link gerado (ex: `https://seuusuario.github.io/tron-iptv/`)
-
-### Deploy no Netlify
-
-1. Suba os arquivos no GitHub
-2. Conecte o repositório no [Netlify](https://netlify.com)
-3. Deploy automático a cada `git push`
-
-### Uso local
-
-Abra o `index.html` direto no navegador — nenhum servidor ou instalação necessária.
-
----
-
-## Login
-
-Na tela inicial, preencha:
-
-| Campo | Exemplo |
-|---|---|
-| Servidor | `http://meuservidor.com:8080` |
-| Usuário | `meuusuario` |
-| Senha | `minhasenha` |
-
-As credenciais são salvas no `localStorage` e preenchidas automaticamente na próxima visita.
-
----
-
-## Ícones PWA
-
-Coloque os ícones em `icons/`:
-
-```
-icons/
-  icon-192.png   (192×192 px)
-  icon-512.png   (512×512 px)
-```
-
----
-
-## Aviso legal
-
-Este projeto é **apenas um player**. Ele não fornece, hospeda nem distribui qualquer conteúdo de IPTV. O uso é de responsabilidade exclusiva do usuário.
+AO VIVO (tab)
+  │
+  ├── COL A: lista de categorias
+  │    COMBATE  8
+  │  ██PREMIERE 33  ← clica
+  │    SPORTV   15
+  │
+  ├── COL B: grade de cards da categoria
+  │    [Premiere 1 FHD] [Premiere 1 HD] [Premiere 2]...
+  │                          ↑ clica num card
+  │
+  └── COL C: card de info abre
+       [logo / thumb]
+       Nome do canal
+       [▶ ASSISTIR]   ← clica
+       [⭐ FAVORITAR]
+            │
+            ▼
+       PLAYER abre na COL B
+       COL A vira lista dos canais
+       COL C mantém a info
