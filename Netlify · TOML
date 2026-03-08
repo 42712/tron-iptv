@@ -1,11 +1,95 @@
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-    Pragma = "no-cache"
-    Expires = "0"
-
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRON IPTV</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#07111a;color:#d0e8f5;font-family:'Segoe UI',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(0,150,200,.07),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(0,100,180,.05),transparent 50%);pointer-events:none}
+.grid{position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.card{position:relative;z-index:10;width:400px;max-width:95vw;background:#0d1e2d;border:1px solid #1a4060;padding:44px 40px 36px}
+.card::before,.card::after{content:'';position:absolute;width:20px;height:20px;border-color:#00c8ff;border-style:solid}
+.card::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.card::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.logo{text-align:center;margin-bottom:36px}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo-txt{font-size:38px;font-weight:900;letter-spacing:8px;color:#00c8ff;text-shadow:0 0 30px rgba(0,200,255,.4)}
+.logo-txt b{color:#3a6a88;font-weight:300}
+.logo-sub{font-size:10px;letter-spacing:4px;color:#2a5070;text-align:center}
+.field{margin-bottom:14px}
+.lbl{display:block;font-size:10px;font-weight:700;letter-spacing:3px;color:#3a7a98;text-transform:uppercase;margin-bottom:6px}
+.iw{position:relative}
+.iw input{width:100%;background:#050f18;border:1px solid #1a3a52;color:#d0e8f5;padding:11px 14px 11px 38px;font-size:13px;outline:none;transition:.2s;font-family:inherit}
+.iw input:focus{border-color:#00c8ff;box-shadow:0 0 0 1px #00c8ff}
+.iw input::placeholder{color:#1a3a50}
+.ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.4;pointer-events:none}
+.eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:#3a6a88;padding:4px}
+.eye:hover{color:#00c8ff}
+.rem{display:flex;align-items:center;gap:8px;margin:4px 0 20px}
+.rem input{accent-color:#00c8ff;width:14px;height:14px;cursor:pointer}
+.rem label{font-size:12px;color:#3a6a88;cursor:pointer}
+.btn{width:100%;padding:13px;background:transparent;border:1px solid #00c8ff;color:#00c8ff;font-size:15px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:color .3s}
+.btn::before{content:'';position:absolute;inset:0;background:#00c8ff;transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:0}
+.btn:hover::before{transform:scaleX(1)}
+.btn:hover{color:#07111a}
+.btn span{position:relative;z-index:1}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled::before{display:none}
+.err{margin-top:12px;padding:10px 14px;background:rgba(255,60,80,.08);border:1px solid rgba(255,60,80,.3);color:#ff4455;font-size:12px;text-align:center;display:none}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="grid"></div>
+<div class="card">
+  <div class="logo">
+    <div class="logo-row">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+        <polygon points="17,2 32,9 32,25 17,32 2,25 2,9" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+        <polygon points="17,8 27,13 27,21 17,26 7,21 7,13" fill="rgba(0,200,255,.08)" stroke="#00c8ff" stroke-width="1"/>
+        <text x="17" y="21" text-anchor="middle" fill="#00c8ff" font-size="9" font-weight="bold" font-family="Arial">TV</text>
+      </svg>
+      <span class="logo-txt">TRON<b>IPTV</b></span>
+    </div>
+    <div class="logo-sub">XTREAM CODES PLAYER</div>
+  </div>
+  <div class="field">
+    <label class="lbl" for="sv">Servidor</label>
+    <div class="iw"><span class="ico">🌐</span><input id="sv" type="url" placeholder="http://servidor:porta" autocomplete="off" spellcheck="false"></div>
+  </div>
+  <div class="field">
+    <label class="lbl" for="us">Usuário</label>
+    <div class="iw"><span class="ico">👤</span><input id="us" type="text" placeholder="seu usuário" autocomplete="off" spellcheck="false"></div>
+  </div>
+  <div class="field">
+    <label class="lbl" for="pw">Senha</label>
+    <div class="iw"><span class="ico">🔑</span><input id="pw" type="password" placeholder="sua senha"><button class="eye" onclick="tpw()" type="button">👁</button></div>
+  </div>
+  <div class="rem"><input type="checkbox" id="rem" checked><label for="rem">Lembrar credenciais</label></div>
+  <button class="btn" id="btn" onclick="login()"><span id="btxt">▶  ENTRAR</span></button>
+  <div class="err" id="err"></div>
+</div>
+<script>
+(function(){try{const s=JSON.parse(localStorage.getItem('tron_s')||'null');if(s){document.getElementById('sv').value=s.sv||'';document.getElementById('us').value=s.us||'';document.getElementById('pw').value=s.pw||'';}}catch(_){}})();
+function tpw(){const p=document.getElementById('pw');p.type=p.type==='password'?'text':'password';}
+function showErr(m){const e=document.getElementById('err');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',4000);}
+function login(){
+  const sv=document.getElementById('sv').value.trim().replace(/\/$/,'');
+  const us=document.getElementById('us').value.trim();
+  const pw=document.getElementById('pw').value;
+  const rem=document.getElementById('rem').checked;
+  if(!sv)return showErr('Informe a URL do servidor');
+  if(!us)return showErr('Informe o usuário');
+  if(!pw)return showErr('Informe a senha');
+  const d={sv,us,pw};
+  rem?localStorage.setItem('tron_s',JSON.stringify(d)):(sessionStorage.setItem('tron_s',JSON.stringify(d)),localStorage.removeItem('tron_s'));
+  document.getElementById('btn').disabled=true;
+  document.getElementById('btxt').textContent='⏳  CONECTANDO...';
+  setTimeout(()=>location.href='player.html',300);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName!=='BUTTON')login();});
+</script>
+</body>
+</html>
